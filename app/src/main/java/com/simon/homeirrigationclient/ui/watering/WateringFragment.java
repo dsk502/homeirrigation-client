@@ -24,8 +24,8 @@ public class WateringFragment extends Fragment {
         binding = FragmentWateringBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        final TextView textView = binding.textWatering;
-        wateringViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        //final TextView textView = binding.textWatering;
+        //wateringViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }
 

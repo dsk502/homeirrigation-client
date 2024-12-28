@@ -4,4 +4,7 @@
     <string name="title_home">主页</string>
     <string name="title_dashboard">面板</string>
     <string name="title_notifications">通知</string>
+    <string name="text_watering_mode">你的灌溉模式是：</string>
+    <string name="text_ok">确认</string>
+    <string name="text_edit">编辑</string>
 </resources>

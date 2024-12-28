@@ -28,8 +28,8 @@ public class NetworkSettingsFragment extends Fragment {
         binding = FragmentNetworkSettingsBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        final TextView textView = binding.textSettings;
-        networkSettingsViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        //final TextView textView = binding.textSettings;
+        //networkSettingsViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }
 
