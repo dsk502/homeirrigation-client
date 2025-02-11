@@ -9,5 +9,13 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="text_devices">Devices</string>
     <string name="text_add">Add</string>
+    <string name="text_add_device">Add a new device</string>
+    <string name="text_name">Name</string>
+    <string name="text_ip_address">IP Address</string>
+    <string name="text_port">Port</string>
+    <string name="text_mode">Mode</string>
+    <string name="text_device_add">Add a new device</string>
+    <!-- Strings used for fragments for navigation -->
+
     <!-- TODO: Remove or change this placeholder text -->
 </resources>

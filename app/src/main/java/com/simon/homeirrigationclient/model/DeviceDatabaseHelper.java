@@ -1,4 +1,4 @@
-package com.simon.homeirrigationclient.controller;
+package com.simon.homeirrigationclient.model;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -17,14 +17,21 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         //Create database table
-        String createTableSQL = "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)";
+        String createTableSQL = "CREATE TABLE devices (id INTEGER PRIMARY KEY, name TEXT, ip TEXT, port INTEGER, mode TEXT)";
         db.execSQL(createTableSQL);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         //When upgrading the database
-        db.execSQL("DROP TABLE IF EXISTS users");
-        onCreate(db);
+        //Do nothing
+        //db.execSQL("DROP TABLE IF EXISTS devices");
+        //onCreate(db);
+    }
+
+    //Generate the primary key (device id)
+    //SQLite's INTEGER corresponds to Java's long
+    public static long generateDeviceId() {
+        return System.currentTimeMillis();
     }
 }

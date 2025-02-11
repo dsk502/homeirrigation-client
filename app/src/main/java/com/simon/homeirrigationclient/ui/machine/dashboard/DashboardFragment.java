@@ -1,10 +1,9 @@
-package com.simon.homeirrigationclient.ui.dashboard;
+package com.simon.homeirrigationclient.ui.machine.dashboard;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;

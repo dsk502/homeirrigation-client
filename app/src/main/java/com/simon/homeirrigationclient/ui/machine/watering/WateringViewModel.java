@@ -1,4 +1,4 @@
-package com.simon.homeirrigationclient.ui.watering;
+package com.simon.homeirrigationclient.ui.machine.watering;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

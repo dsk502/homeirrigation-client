@@ -1,15 +1,16 @@
-package com.simon.homeirrigationclient.ui.networksettings;
+package com.simon.homeirrigationclient.ui.machine.dashboard;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class NetworkSettingsViewModel extends ViewModel {
+public class DashboardViewModel extends ViewModel {
+
     //private final MutableLiveData<String> mText;
 
-    public NetworkSettingsViewModel() {
+    public DashboardViewModel() {
         //mText = new MutableLiveData<>();
-        //mText.setValue("This is network settings fragment");
+        //mText.setValue("This is home fragment");
     }
 
     /*

@@ -1,4 +1,4 @@
-package com.simon.homeirrigationclient.controller;
+package com.simon.homeirrigationclient.model;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -40,7 +40,7 @@ public class DeviceCardGridViewAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(R.layout.cardview_device_card_item, parent, false);
+            convertView = inflater.inflate(R.layout.device_card, parent, false);
         }
 
         TextView textView = convertView.findViewById(R.id.textView);

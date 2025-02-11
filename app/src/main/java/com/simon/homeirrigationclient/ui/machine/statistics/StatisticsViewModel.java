@@ -1,4 +1,4 @@
-package com.simon.homeirrigationclient.ui.statistics;
+package com.simon.homeirrigationclient.ui.machine.statistics;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

@@ -2,30 +2,30 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/mobile_navigation"
+    android:id="@+id/mobile_navigation_machine"
     app:startDestination="@+id/navigation_dashboard">
 
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="com.simon.homeirrigationclient.ui.dashboard.DashboardFragment"
+        android:name="com.simon.homeirrigationclient.ui.machine.dashboard.DashboardFragment"
         android:label="Dashboard"
         tools:layout="@layout/fragment_dashboard" />
 
     <fragment
         android:id="@+id/navigation_watering"
-        android:name="com.simon.homeirrigationclient.ui.watering.WateringFragment"
+        android:name="com.simon.homeirrigationclient.ui.machine.watering.WateringFragment"
         android:label="Watering"
         tools:layout="@layout/fragment_watering" />
 
     <fragment
         android:id="@+id/navigation_statistics"
-        android:name="com.simon.homeirrigationclient.ui.statistics.StatisticsFragment"
+        android:name="com.simon.homeirrigationclient.ui.machine.statistics.StatisticsFragment"
         android:label="Statistics"
         tools:layout="@layout/fragment_statistics" />
 
     <fragment
         android:id="@+id/navigation_network_settings"
-        android:name="com.simon.homeirrigationclient.ui.networksettings.NetworkSettingsFragment"
+        android:name="com.simon.homeirrigationclient.ui.machine.networksettings.NetworkSettingsFragment"
         android:label="Settings"
         tools:layout="@layout/fragment_network_settings" />
 </navigation>

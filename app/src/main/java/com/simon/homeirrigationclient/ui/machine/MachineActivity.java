@@ -1,4 +1,4 @@
-package com.simon.homeirrigationclient;
+package com.simon.homeirrigationclient.ui.machine;
 
 import android.os.Bundle;
 
@@ -10,6 +10,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.simon.homeirrigationclient.R;
 import com.simon.homeirrigationclient.databinding.ActivityMachineBinding;
 
 public class MachineActivity extends AppCompatActivity {

@@ -15,12 +15,22 @@
         android:padding="16dp">
 
         <TextView
-            android:id="@+id/textView"
-            android:layout_width="match_parent"
+            android:id="@+id/device_card_name"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Card Content"
+            android:text=""
             android:textSize="18sp" />
 
+        <!-- address = ip + port -->
+        <TextView
+            android:id="@+id/device_card_address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/device_card_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
         <!-- 可以添加更多的视图组件 -->
 
     </LinearLayout>

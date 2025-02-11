@@ -1,4 +1,4 @@
-package com.simon.homeirrigationclient.ui.home;
+package com.simon.homeirrigationclient.ui.main.home;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.simon.homeirrigationclient.controller.DeviceCardGridViewAdapter;
+import com.simon.homeirrigationclient.model.DeviceCardGridViewAdapter;
 import com.simon.homeirrigationclient.databinding.FragmentHomeBinding;
 
 public class HomeFragment extends Fragment {

@@ -1,4 +1,4 @@
-package com.simon.homeirrigationclient.ui.networksettings;
+package com.simon.homeirrigationclient.ui.machine.networksettings;
 
 import androidx.lifecycle.ViewModel;
 

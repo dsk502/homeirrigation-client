@@ -1,16 +1,16 @@
-package com.simon.homeirrigationclient.ui.dashboard;
+package com.simon.homeirrigationclient.ui.main.about;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class DashboardViewModel extends ViewModel {
+public class AboutViewModel extends ViewModel {
 
     //private final MutableLiveData<String> mText;
 
-    public DashboardViewModel() {
+    public AboutViewModel() {
         //mText = new MutableLiveData<>();
-        //mText.setValue("This is home fragment");
+        //mText.setValue("This is notifications fragment");
     }
 
     /*
