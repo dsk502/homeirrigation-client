@@ -8,12 +8,10 @@
     <fragment
         android:id="@+id/navigation_home"
         android:name="com.simon.homeirrigationclient.ui.main.home.HomeFragment"
-        android:label="@string/title_home"
         tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/navigation_about"
         android:name="com.simon.homeirrigationclient.ui.main.about.AboutFragment"
-        android:label="About"
         tools:layout="@layout/fragment_about" />
 </navigation>

@@ -12,11 +12,6 @@
         android:title="Watering" />
 
     <item
-        android:id="@+id/navigation_network_settings"
-        android:icon="@drawable/ic_network_settings_black_24dp"
-        android:title="Network Settings" />
-
-    <item
         android:id="@+id/navigation_statistics"
         android:icon="@drawable/ic_statistics_black_24dp"
         android:title="Statistics" />

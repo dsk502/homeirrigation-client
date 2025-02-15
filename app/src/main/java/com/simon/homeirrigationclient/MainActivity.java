@@ -21,10 +21,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //Set bottom navigation bar
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        //Set toolbar as actionbar
+        Toolbar toolbar = findViewById(R.id.toolbar_main);
+        setSupportActionBar(toolbar);
+
+        //Set bottom navigation bar
         BottomNavigationView navView = findViewById(R.id.nav_view_main);
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
@@ -35,9 +40,7 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navViewMain, navController);
 
-        //Set toolbar as actionbar
-        Toolbar toolbar = findViewById(R.id.toolbar_main);
-        setSupportActionBar(toolbar);
+
     }
 
 }

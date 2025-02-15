@@ -13,6 +13,8 @@ public class DeviceAddActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_add);
+
+        //Set the toolbar for the activity
         Toolbar toolbar = findViewById(R.id.toolbar_device_add);
         setSupportActionBar(toolbar);
     }
