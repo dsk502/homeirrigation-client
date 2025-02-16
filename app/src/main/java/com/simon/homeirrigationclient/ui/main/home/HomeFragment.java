@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.simon.homeirrigationclient.model.DeviceCardGridViewAdapter;
 import com.simon.homeirrigationclient.databinding.FragmentHomeBinding;
 
 public class HomeFragment extends Fragment {
@@ -42,6 +41,8 @@ public class HomeFragment extends Fragment {
 
         //final TextView textView = binding.textHome;
         //homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+
+
         return root;
     }
 
