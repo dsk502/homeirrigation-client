@@ -12,12 +12,6 @@
         tools:layout="@layout/fragment_dashboard" />
 
     <fragment
-        android:id="@+id/navigation_watering"
-        android:name="com.simon.homeirrigationclient.ui.machine.watering.WateringFragment"
-        android:label="Watering"
-        tools:layout="@layout/fragment_watering" />
-
-    <fragment
         android:id="@+id/navigation_statistics"
         android:name="com.simon.homeirrigationclient.ui.machine.statistics.StatisticsFragment"
         android:label="Statistics"

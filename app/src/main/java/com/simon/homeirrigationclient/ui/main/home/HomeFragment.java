@@ -25,22 +25,6 @@ public class HomeFragment extends Fragment {
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
-        /*
-
-        gridView = findViewById(R.id.gridView);
-        items = new ArrayList<>();
-        adapter = new CardViewAdapter(this, items);
-
-        // 添加数据到列表
-        for (int i = 0; i < 20; i++) {
-            items.add("Item " + (i + 1));
-        }
-
-        gridView.setAdapter(adapter);
-         */
-
-        //final TextView textView = binding.textHome;
-        //homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
 
 
         return root;

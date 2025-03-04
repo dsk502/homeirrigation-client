@@ -7,11 +7,6 @@
         android:title="Dashboard" />
 
     <item
-        android:id="@+id/navigation_watering"
-        android:icon="@drawable/ic_watering_black_24dp"
-        android:title="Watering" />
-
-    <item
         android:id="@+id/navigation_statistics"
         android:icon="@drawable/ic_statistics_black_24dp"
         android:title="Statistics" />

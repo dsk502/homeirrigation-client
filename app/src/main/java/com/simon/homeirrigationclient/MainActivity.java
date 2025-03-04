@@ -1,7 +1,5 @@
 package com.simon.homeirrigationclient;
 
-import android.bluetooth.BluetoothClass;
-import android.content.Context;
 import android.os.Bundle;
 import android.widget.GridView;
 
@@ -15,7 +13,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.simon.homeirrigationclient.databinding.ActivityMainBinding;
-import com.simon.homeirrigationclient.model.DeviceItem;
+import com.simon.homeirrigationclient.model.DeviceInfo;
 import com.simon.homeirrigationclient.ui.main.home.DeviceCardGridViewAdapter;
 
 import java.util.ArrayList;
@@ -50,11 +48,11 @@ public class MainActivity extends AppCompatActivity {
         //Set GridView
         GridView gridView = findViewById(R.id.gridView_device_card);
 
-        DeviceItem deviceItem = new DeviceItem("Test", "127.0.0.1", "test_mode");
-        ArrayList<DeviceItem> deviceItems = new ArrayList<>();
-        deviceItems.add(deviceItem);
+        DeviceInfo deviceInfo = new DeviceInfo(1L, "Test", "127.0.0.1", 10,1);
+        ArrayList<DeviceInfo> deviceInfoList = new ArrayList<>();
+        deviceInfoList.add(deviceInfo);
 
-        DeviceCardGridViewAdapter gridViewAdapter = new DeviceCardGridViewAdapter(this, deviceItems);
+        DeviceCardGridViewAdapter gridViewAdapter = new DeviceCardGridViewAdapter(this, deviceInfoList);
         gridView.setAdapter(gridViewAdapter);
     }
 

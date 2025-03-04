@@ -1,5 +1,6 @@
 package com.simon.homeirrigationclient.ui.main.home;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,27 +9,27 @@ import android.widget.TextView;
 import android.widget.BaseAdapter;
 
 import com.simon.homeirrigationclient.R;
-import com.simon.homeirrigationclient.model.DeviceItem;
+import com.simon.homeirrigationclient.model.DeviceInfo;
 
 import java.util.ArrayList;
 
 public class DeviceCardGridViewAdapter extends BaseAdapter {
     private Context context;
-    private ArrayList<DeviceItem> deviceItems;    //The data of all device cards
+    private ArrayList<DeviceInfo> deviceInfos;    //The data of all device cards
 
-    public DeviceCardGridViewAdapter(Context context, ArrayList<DeviceItem> deviceItems) {
+    public DeviceCardGridViewAdapter(Context context, ArrayList<DeviceInfo> deviceInfos) {
         this.context = context;
-        this.deviceItems = deviceItems;
+        this.deviceInfos = deviceInfos;
     }
 
     @Override
     public int getCount() {
-        return deviceItems.size();
+        return deviceInfos.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return deviceItems.get(position);
+        return deviceInfos.get(position);
     }
 
     @Override
@@ -37,6 +38,7 @@ public class DeviceCardGridViewAdapter extends BaseAdapter {
     }
 
     //Set a single card view
+    @SuppressLint("DefaultLocale")
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
@@ -50,12 +52,18 @@ public class DeviceCardGridViewAdapter extends BaseAdapter {
         //CardView cardView = convertView.findViewById(R.id.cardView_device_card_item);
 
         //Get current device item
-        DeviceItem deviceItem = deviceItems.get(position);
+        DeviceInfo deviceInfo = deviceInfos.get(position);
 
         //Set the name, address and mode on the UI
-        deviceCardName.setText(deviceItem.name);
-        deviceCardAddress.setText(deviceItem.address);
-        deviceCardMode.setText(deviceItem.mode);
+        deviceCardName.setText(deviceInfo.name);
+        deviceCardAddress.setText(String.format("%s:%d", deviceInfo.host, deviceInfo.port));
+        if(deviceInfo.mode == 1) {
+            deviceCardMode.setText("Automatic");
+        } else if(deviceInfo.mode == 2) {
+            deviceCardMode.setText("Scheduled");
+        } else {    //mode == 3
+            deviceCardMode.setText("Manual");
+        }
 
         return convertView;
     }

@@ -1,12 +1,18 @@
 package com.simon.homeirrigationclient.model;
 
+import android.annotation.SuppressLint;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DeviceDatabaseHelper extends SQLiteOpenHelper {
     //Database name
-    private static final String DATABASE_NAME = "deviceDatabase.db";
+    private static final String DATABASE_NAME = "device_database.db";
     //Database version
     private static final int DATABASE_VERSION = 1;
 
@@ -16,22 +22,109 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        //Create database table
-        String createTableSQL = "CREATE TABLE devices (id INTEGER PRIMARY KEY, name TEXT, ip TEXT, port INTEGER, mode TEXT)";
-        db.execSQL(createTableSQL);
+        //Create database tables
+        String createDevicesTableSQL = "CREATE TABLE servers (server_id TEXT PRIMARY KEY, name TEXT, client_add_time INTEGER, host TEXT, port INTEGER, mode INTEGER, water_amount REAL, automatic_humidity REAL, scheduled_freq INTEGER, scheduled_time TEXT)";
+        db.execSQL(createDevicesTableSQL);
+        /*
+        String createWateringDataTableSQL = "CREATE TABLE watering_data (id INTEGER PRIMARY KEY)";
+        db.execSQL(createWateringDataTableSQL);
+        */
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         //When upgrading the database
         //Do nothing
-        //db.execSQL("DROP TABLE IF EXISTS devices");
-        //onCreate(db);
+        db.execSQL("DROP TABLE IF EXISTS servers");
+        onCreate(db);
     }
 
-    //Generate the primary key (device id)
+    //Add a device to the database
+    @SuppressLint("DefaultLocale")
+    public int insertDevice(String serverId, String name, String host, int port, int mode, double waterAmount, double automaticHumidity, int scheduledFreq, String scheduledTime) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        //Generate the record for the device
+        ContentValues deviceRecord = new ContentValues();
+        deviceRecord.put("server_id", serverId);
+        deviceRecord.put("name", name);
+        deviceRecord.put("client_add_time", getAddTime());
+        deviceRecord.put("host", host);
+        deviceRecord.put("port", port);
+        deviceRecord.put("mode", mode);
+        deviceRecord.put("water_amount", waterAmount);
+        deviceRecord.put("automatic_humidity", automaticHumidity);
+        deviceRecord.put("scheduled_freq", scheduledFreq);
+        deviceRecord.put("scheduled_time", scheduledTime);
+
+        //Insert the record to the table "devices"
+        if(db.insert("servers", null, deviceRecord) == -1L) {
+            return -1;
+        }
+
+        //Create a record in the watering_data table on the client side, in order to temp the data from the server side (Raspberry Pi)
+        //The timezone of the statistics will be server's
+        String createWateringDataTempSQL = String.format("CREATE TABLE watering_record_%s (day INTEGER PRIMARY KEY, time_of_watering INTEGER amount_of_watering REAL)", serverId);
+        db.execSQL(createWateringDataTempSQL);
+
+        db.close();
+        return 0;   //Success
+    }
+
+    //Delete a device from the local database
+    public void deleteDevice(String serverId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String deleteDeviceInfoSQL = String.format("DELETE FROM servers WHERE server_id='%s'", serverId);
+        db.execSQL(deleteDeviceInfoSQL);
+        String deleteWateringDataSQL = String.format("DROP TABLE IF EXISTS watering_record_%s", serverId);
+        db.execSQL(deleteWateringDataSQL);
+        db.close();
+    }
+
+    //Get the basic information (server_id, name, host, port, mode and mode-related information) of all devices, to show device cards
+    @SuppressLint("Range")
+    public List<DeviceInfo> getAllDeviceBasicInfo() {
+        List<DeviceInfo> deviceInfoList = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("devices",new String[]{"id", "name", "host", "port", "mode", "water_amount", "automatic_humidity", "scheduled_freq"}, null, null, null, null, null, null);
+        if(cursor != null) {
+            if(cursor.moveToFirst()) {
+                do {
+                    //For each record
+                    long id = cursor.getLong(cursor.getColumnIndex("id"));
+                    String name = cursor.getString(cursor.getColumnIndex("name"));
+                    String host = cursor.getString(cursor.getColumnIndex("host"));
+                    int port = cursor.getInt(cursor.getColumnIndex("port"));
+                    int mode = cursor.getInt(cursor.getColumnIndex("mode"));
+                    double waterAmount = cursor.getDouble(cursor.getColumnIndex("water_amount"));
+                    double automaticHumidity = cursor.getDouble(cursor.getColumnIndex("automatic_humidity"));
+                    int scheduledFreq = cursor.getInt(cursor.getColumnIndex("scheduled_freq"));
+                    DeviceInfo deviceInfo = new DeviceInfo(id, name, host, port, mode, waterAmount, automaticHumidity, scheduledFreq);
+                    deviceInfoList.add(deviceInfo);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+        db.close();
+        return deviceInfoList;
+    }
+
+    //Get the statistics of a single device from local database
+    public void getDeviceStat(String serverId) {
+
+    }
+
+    //Sync watering data from the server
+    public void syncServerWateringData() {
+
+    }
+
+    //Get the timestamp of the client adding the Raspberry Pi
+    //The timestamp is not related to timezone
     //SQLite's INTEGER corresponds to Java's long
-    public static long generateDeviceId() {
+    public static long getAddTime() {
         return System.currentTimeMillis();
     }
+
+
 }
