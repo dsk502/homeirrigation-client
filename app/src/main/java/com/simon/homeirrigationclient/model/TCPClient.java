@@ -1,6 +1,8 @@
 package com.simon.homeirrigationclient.model;
 
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -16,7 +18,7 @@ public class TCPClient {
         return null;
     }
 
-    public int addDeviceRequest(long timeStamp, String clientPubkey) {
+    public int addDeviceRequest(long timeStamp, String clientPubkey, DeviceInfo deviceInfo) {
 
         try (Socket socket = new Socket(serverHost, serverPort)) {
             //InputStream is used for reading messages coming from server
@@ -27,47 +29,35 @@ public class TCPClient {
 
             //Variables for sending and receiving
             byte[] sendingBytes;
-            byte[] sendingMessageBytes;
             String sendingMessage;
 
             byte[] receiveBuffer = new byte[1024];
             int receiveLen;
-            byte isEncrypted;
-            byte[] receivedMessageBytes;
             String receivedMessage;
             String recvCommand;
-            String[] recvArguments;
+            String[] recvParams;
 
             //Send add_device(timestamp)
-            sendingMessage = "add_device(" + timeStamp + ")\n";
-            sendingMessageBytes = sendingMessage.getBytes();
-            sendingBytes = new byte[sendingMessageBytes.length + 1];
-            sendingBytes[0] = 0x01;   //Unencrypted
-            System.arraycopy(sendingMessageBytes, 0, sendingBytes, 1, sendingMessageBytes.length);
+            sendingMessage = "add_device(" + timeStamp + ")";
+            sendingBytes = packMessage(sendingMessage, false);
             out.write(sendingBytes);
             out.flush();
 
             //Receive key_exchange_server(server_pubkey)
             receiveLen = in.read(receiveBuffer);
-
-            isEncrypted = receiveBuffer[0];
-            //The received message should not be encrypted
-            if(isEncrypted == 0x02) {
+            receivedMessage = unpackUnencryptedMessage(receiveBuffer, receiveLen);
+            if(receivedMessage == null) {   //If encrypted or no end tag -> error
                 return -1;
             }
-            receivedMessageBytes = new byte[receiveLen - 1];
-            System.arraycopy(receiveBuffer, 1, receivedMessageBytes, 0, receivedMessageBytes.length);
-            receivedMessage = new String(receivedMessageBytes);
 
             //Retrieve command and arguments
-            recvCommand = receivedMessage.substring(0, receivedMessage.indexOf('('));
-            recvArguments = receivedMessage.substring(receivedMessage.indexOf('(') + 1, receivedMessage.indexOf(')')).split(",");
-            if(!(recvCommand.equals("key_exchange_server") && recvArguments.length == 1)) {
+            recvCommand = extractCommand(receivedMessage);
+            recvParams = extractParams(receivedMessage);
+            if(!(recvCommand.equals("key_exchange_server") && recvParams.length == 1)) {
                 return -1;
             }
-
             //Store the server_pubkey
-
+            String serverPubKey = recvParams[0];
 
             //Reply key_exchange_client(client_pubkey)
             sendingMessage = "key_exchange_client(" + clientPubkey + ")";
@@ -75,10 +65,49 @@ public class TCPClient {
             out.write(sendingBytes);
             out.flush();
 
-            //Receive request_add_param(server_id)
+            //Receive and process request_add_param(server_id) -- encrypted
+            receiveLen = in.read(receiveBuffer);
+            receivedMessage = unpackEncryptedMessage(receiveBuffer, receiveLen);
+            if(receivedMessage == null) {
+                return -1;
+            }
+            recvCommand = extractCommand(receivedMessage);
+            recvParams = extractParams(receivedMessage);
+            if(!(recvCommand.equals("request_add_param") && recvParams.length == 1)) {
+                return -1;
+            }
+            String serverId = recvParams[0];
+
+            //Reply reply_add_param(mode,water_amount,scheduled_freq,scheduled_time) -- encrypted
+            sendingMessage = "reply_add_param(" + deviceInfo.mode + "," + deviceInfo.waterAmount + "," + deviceInfo.scheduledFreq + "," + deviceInfo.scheduledTime + ")";
+            sendingBytes = packMessage(sendingMessage, true);
+            out.write(sendingBytes);
+            out.flush();
+
+            //Receive finish_add_server() -- encrypted
+            receiveLen = in.read(receiveBuffer);
+            receivedMessage = unpackEncryptedMessage(receiveBuffer, receiveLen);
+            recvCommand = extractCommand(receivedMessage);
+            recvParams = extractParams(receivedMessage);
+            if(!(recvCommand.equals("request_add_param") && recvParams.length == 0)) {
+                return -1;
+            }
+            //Save the data to the database
+
+            //Reply finish_add_client()
+            sendingMessage = "finish_add_client()";
+            sendingBytes = packMessage(sendingMessage, true);
+            out.write(sendingBytes);
+            out.flush();
+
+            //Close the input and output stream
+            in.close();
+            out.close();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.println(Log.ERROR, "Error", "Network Error!");
+        } catch (IndexOutOfBoundsException e) {
+            Log.println(Log.ERROR,"Error", "Message Error!");
         }
     }
 
@@ -100,8 +129,24 @@ public class TCPClient {
     }
 
     //Unpack (and decrypt) the received message from the receive buffer
-    private String unpackMessage(byte[] receiveBuffer, int receiveLen) {
-        byte encryptedTag = receiveBuffer[0];
+    private String unpackUnencryptedMessage(byte[] receiveBuffer, int receiveLen) {
+        if(receiveBuffer[0] != (byte)0x01) {    //If encrypted -> error
+            return null;
+        }
+        byte endTag = receiveBuffer[receiveLen - 1];
+        if(endTag != (byte)10) {
+            return null;    //The end of the message is not '\n', which is an error
+        }
+        //copy the message block to the array messageBlock
+        byte[] messageBlock = new byte[receiveLen - 2];
+        System.arraycopy(receiveBuffer, 1, messageBlock, 0, messageBlock.length);
+        return new String(messageBlock);
+    }
+
+    private String unpackEncryptedMessage(byte[] receiveBuffer, int receiveLen) {
+        if(receiveBuffer[0] != 0x02) {  //If not encrypted -> error
+            return null;
+        }
         byte endTag = receiveBuffer[receiveLen - 1];
         if(endTag != (byte)10) {
             return null;    //The end of the message is not '\n', which is an error
@@ -111,12 +156,19 @@ public class TCPClient {
         System.arraycopy(receiveBuffer, 1, messageBlock, 0, messageBlock.length);
         String messageBlockStr = new String(messageBlock);
         String messagePT;
-        if(encryptedTag == (byte)0x01) {    //unencrypted
-            messagePT = messageBlockStr;
-        } else {
-            //messagePT =   //Decrypt the message
-            messagePT = null;
-        }
+
+        //messagePT =   //Decrypt the message
+        messagePT = null;
+
         return messagePT;
+    }
+
+    private String extractCommand(String messagePT) throws IndexOutOfBoundsException {
+        return messagePT.substring(0, messagePT.indexOf('('));
+    }
+
+    private String[] extractParams(String messagePT) throws IndexOutOfBoundsException {
+        //If the substring (string between two braces) is empty, the split function will return an empty string array
+        return messagePT.substring(messagePT.indexOf('(') + 1, messagePT.indexOf(')')).split(",");
     }
 }

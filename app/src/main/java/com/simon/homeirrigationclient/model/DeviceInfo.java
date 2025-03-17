@@ -28,13 +28,15 @@ public class DeviceInfo {
     //This setting is only valid when mode == automatic
     //Range: [0.0, 1.0)
     //Default: 0.5
-    public double automaticHumidity;
+    //public double automaticHumidity;
 
     //The scheduled frequency
     //This setting is only valid when mode == scheduled
     //Range: {1 == every half a day, 2 == every day, 3 == every two days, 4 == every three days, 5 == once a week}
     //Default: 2
     public int scheduledFreq;
+
+    public String scheduledTime;
 
     //Constructor with all parameters
     public DeviceInfo(long id, String name, String host, int port, int mode, double waterAmount, double automaticHumidity, int scheduledFreq) {
@@ -44,7 +46,7 @@ public class DeviceInfo {
         this.port = port;
         this.mode = mode;
         this.waterAmount = waterAmount;
-        this.automaticHumidity = automaticHumidity;
+        //this.automaticHumidity = automaticHumidity;
         this.scheduledFreq = scheduledFreq;
     }
 
@@ -56,7 +58,7 @@ public class DeviceInfo {
         this.port = port;
         this.mode = mode;
         this.waterAmount = 100.0;
-        this.automaticHumidity = 0.5;
+        //this.automaticHumidity = 0.5;
         this.scheduledFreq = 2;
     }
 }
