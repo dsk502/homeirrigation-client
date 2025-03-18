@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 public class TCPClient {
 
@@ -103,24 +104,27 @@ public class TCPClient {
             //Close the input and output stream
             in.close();
             out.close();
+            return 0;
 
         } catch (IOException e) {
             Log.println(Log.ERROR, "Error", "Network Error!");
+            return -1;
         } catch (IndexOutOfBoundsException e) {
             Log.println(Log.ERROR,"Error", "Message Error!");
+            return -1;
         }
     }
 
     //Pack (and encrypt) the sending message
     private byte[] packMessage(String message, boolean isEncrypted) {
         byte[] messageBytes;
-        byte[] packedMessage = new byte[messageBytes.length + 2];
+        byte[] packedMessage = new byte[message.length() + 2];
         if(isEncrypted) {
             //String encryptedMessage =     //Encrypt the message
             //messageBytes = encryptedMessage.getBytes();   //Convert the encrypted message to byte array
             packedMessage[0] = 0x02;    //Set the first byte of the packed byte array
         } else {
-            messageBytes = message.getBytes();
+            messageBytes = message.getBytes(StandardCharsets.US_ASCII);
             packedMessage[0] = 0x01;
         }
         System.arraycopy(messageBytes, 0, packedMessage, 1, messageBytes.length);   //Copy the message block to the packed array
@@ -133,12 +137,13 @@ public class TCPClient {
         if(receiveBuffer[0] != (byte)0x01) {    //If encrypted -> error
             return null;
         }
-        byte endTag = receiveBuffer[receiveLen - 1];
-        if(endTag != (byte)10) {
+        //byte endTag = receiveBuffer[receiveLen - 1];
+        int indexOfEndTag = findIndexOf(receiveBuffer, (byte)10);
+        if(indexOfEndTag == -1) {
             return null;    //The end of the message is not '\n', which is an error
         }
         //copy the message block to the array messageBlock
-        byte[] messageBlock = new byte[receiveLen - 2];
+        byte[] messageBlock = new byte[indexOfEndTag];
         System.arraycopy(receiveBuffer, 1, messageBlock, 0, messageBlock.length);
         return new String(messageBlock);
     }
@@ -147,12 +152,12 @@ public class TCPClient {
         if(receiveBuffer[0] != 0x02) {  //If not encrypted -> error
             return null;
         }
-        byte endTag = receiveBuffer[receiveLen - 1];
-        if(endTag != (byte)10) {
+        int indexOfEndTag = findIndexOf(receiveBuffer, (byte)10);
+        if(indexOfEndTag == -1) {
             return null;    //The end of the message is not '\n', which is an error
         }
         //copy the message block to the array messageBlock
-        byte[] messageBlock = new byte[receiveLen - 2];
+        byte[] messageBlock = new byte[indexOfEndTag];
         System.arraycopy(receiveBuffer, 1, messageBlock, 0, messageBlock.length);
         String messageBlockStr = new String(messageBlock);
         String messagePT;
@@ -170,5 +175,14 @@ public class TCPClient {
     private String[] extractParams(String messagePT) throws IndexOutOfBoundsException {
         //If the substring (string between two braces) is empty, the split function will return an empty string array
         return messagePT.substring(messagePT.indexOf('(') + 1, messagePT.indexOf(')')).split(",");
+    }
+
+    public static int findIndexOf(byte[] array, byte target) {
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == target) {
+                return i; // 返回找到的索引
+            }
+        }
+        return -1; // 如果没有找到，返回-1
     }
 }
