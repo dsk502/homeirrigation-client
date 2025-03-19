@@ -46,7 +46,7 @@ public class TCPClient {
 
             //Receive key_exchange_server(server_pubkey)
             receiveLen = in.read(receiveBuffer);
-            receivedMessage = unpackUnencryptedMessage(receiveBuffer, receiveLen);
+            receivedMessage = unpackUnencryptedMessage(receiveBuffer);
             if(receivedMessage == null) {   //If encrypted or no end tag -> error
                 return -1;
             }
@@ -68,7 +68,7 @@ public class TCPClient {
 
             //Receive and process request_add_param(server_id) -- encrypted
             receiveLen = in.read(receiveBuffer);
-            receivedMessage = unpackEncryptedMessage(receiveBuffer, receiveLen);
+            receivedMessage = unpackEncryptedMessage(receiveBuffer);
             if(receivedMessage == null) {
                 return -1;
             }
@@ -87,7 +87,7 @@ public class TCPClient {
 
             //Receive finish_add_server() -- encrypted
             receiveLen = in.read(receiveBuffer);
-            receivedMessage = unpackEncryptedMessage(receiveBuffer, receiveLen);
+            receivedMessage = unpackEncryptedMessage(receiveBuffer);
             recvCommand = extractCommand(receivedMessage);
             recvParams = extractParams(receivedMessage);
             if(!(recvCommand.equals("request_add_param") && recvParams.length == 0)) {
@@ -133,7 +133,7 @@ public class TCPClient {
     }
 
     //Unpack (and decrypt) the received message from the receive buffer
-    private String unpackUnencryptedMessage(byte[] receiveBuffer, int receiveLen) {
+    private String unpackUnencryptedMessage(byte[] receiveBuffer) {
         if(receiveBuffer[0] != (byte)0x01) {    //If encrypted -> error
             return null;
         }
@@ -148,7 +148,7 @@ public class TCPClient {
         return new String(messageBlock);
     }
 
-    private String unpackEncryptedMessage(byte[] receiveBuffer, int receiveLen) {
+    private String unpackEncryptedMessage(byte[] receiveBuffer) {
         if(receiveBuffer[0] != 0x02) {  //If not encrypted -> error
             return null;
         }
