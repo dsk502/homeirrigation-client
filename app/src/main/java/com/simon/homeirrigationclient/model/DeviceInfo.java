@@ -1,13 +1,17 @@
 package com.simon.homeirrigationclient.model;
 
-//Class to describe a device
+//Class to describe a device (server)
 public class DeviceInfo {
 
     //The ID of the device
-    public long id;
+    public long serverId;
 
     //The name of the device
     public String name;
+
+    public String serverPubkey;
+
+    public long clientAddTime;
 
     //The IP address or domain name of the device
     public String host;
@@ -32,33 +36,35 @@ public class DeviceInfo {
 
     //The scheduled frequency
     //This setting is only valid when mode == scheduled
-    //Range: {1 == every half a day, 2 == every day, 3 == every two days, 4 == every three days, 5 == once a week}
-    //Default: 2
+    //Range: {1 == every day, 2 == every two days, 3 == every three days, 4 == once a week}
+    //Default: 1
     public int scheduledFreq;
 
     public String scheduledTime;
 
     //Constructor with all parameters
-    public DeviceInfo(long id, String name, String host, int port, int mode, double waterAmount, double automaticHumidity, int scheduledFreq) {
-        this.id = id;
+    public DeviceInfo(long id, String name, String serverPubkey, long clientAddTime, String host, int port, int mode, double waterAmount, double automaticHumidity, int scheduledFreq) {
+        this.serverId = id;
         this.name = name;
+        this.serverPubkey = serverPubkey;
+        this.clientAddTime = clientAddTime;
         this.host = host;
         this.port = port;
         this.mode = mode;
         this.waterAmount = waterAmount;
-        //this.automaticHumidity = automaticHumidity;
         this.scheduledFreq = scheduledFreq;
     }
 
     //Constructor with parameters that do not have a default value
-    public DeviceInfo(long id, String name, String host, int port, int mode) {
+    public DeviceInfo(long id, String name, String serverPubkey, long clientAddTime, String host, int port, int mode) {
         this.id = id;
         this.name = name;
+        this.serverPubkey = serverPubkey;
+        this.clientAddTime = clientAddTime;
         this.host = host;
         this.port = port;
         this.mode = mode;
         this.waterAmount = 100.0;
-        //this.automaticHumidity = 0.5;
         this.scheduledFreq = 2;
     }
 }

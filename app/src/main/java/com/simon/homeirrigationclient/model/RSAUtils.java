@@ -19,12 +19,14 @@ import java.util.Base64;
 
 import javax.crypto.Cipher;
 
-//The keys are in Base64-encoded DER format
+//The RSA public and private keys are in Base64-encoded DER format
+
 public class RSAUtils {
 
     public static final String CLIENT_PUBLIC_KEY_FILENAME = "client_pubkey.der";
     public static final String CLIENT_PRIVATE_KEY_FILENAME = "client_prikey.der";
 
+    //public static final String AES_KEY_FILENAME = "aes_key.txt";
     private final Context context;
 
     public RSAUtils(Context context) {
@@ -34,7 +36,7 @@ public class RSAUtils {
     //Generate Keypair
     //Public key is keyPair.getPublic
     //Private key is keyPair.getPrivate
-    public KeyPair generateKeyPair() throws NoSuchAlgorithmException {
+    public KeyPair generateRSAKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(2048);
         return keyGen.generateKeyPair();
@@ -62,7 +64,7 @@ public class RSAUtils {
     }
 
     //Encrypt data
-    public String encrypt(String data, PublicKey publicKey) throws Exception {
+    public String rsaEncrypt(String data, PublicKey publicKey) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         byte[] encryptedBytes = cipher.doFinal(data.getBytes());
@@ -70,7 +72,7 @@ public class RSAUtils {
     }
 
     //Decrypt data
-    public String decrypt(String encryptedData, PrivateKey privateKey) throws Exception {
+    public String rsaDecrypt(String encryptedData, PrivateKey privateKey) throws Exception {
         byte[] encryptedBytes = Base64.getDecoder().decode(encryptedData);
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);

@@ -1,23 +1,36 @@
 package com.simon.homeirrigationclient.model;
 
 
+import android.content.Context;
 import android.util.Log;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+
 public class TCPClient {
 
+    public Context context;
     public String serverHost = "172.20.10.6";
     public int serverPort = 7400;
     //use \n to end the data
     //Ask the server (Raspberry Pi) to generate server id
-    public static String generateServerId() {
-        return null;
+
+    public String serverPubKey;
+
+    public RSAUtils rsaUtils;
+    public TCPClient(Context context, String serverHost, int serverPort) {
+        this.context = context;
+        this.serverHost = serverHost;
+        this.serverPort = serverPort;
     }
+
 
     public int addDeviceRequest(long timeStamp, String clientPubkey, DeviceInfo deviceInfo) {
 
@@ -115,13 +128,99 @@ public class TCPClient {
         }
     }
 
+    public void downloadStatRequest(String serverId) {
+        String serverAddress = "127.0.0.1";
+        int serverPort = 8080;
+        String receiveFilePath = "temp/watering_record_" + serverId + "_encrypted.db";
+
+        try (
+            Socket socket = new Socket(serverAddress, serverPort);
+            InputStream inputStream = socket.getInputStream();
+            OutputStream outputStream = socket.getOutputStream();
+            FileOutputStream fileOutputStream = new FileOutputStream(receiveFilePath);
+        ) {
+            //For the messages
+            byte[] sendingBytes;
+            String sendingMessage;
+
+            byte[] receiveBuffer = new byte[1024];
+            int receiveLen;
+            String receivedMessage;
+            String recvCommand;
+            String[] recvParams;
+
+            //Sending download_stat()
+            sendingMessage = "download_stat()";
+            sendingBytes = packMessage(sendingMessage, true);
+            outputStream.write(sendingBytes);
+            outputStream.flush();
+
+            //Receive stat_key(aeskey, iv)
+            receiveLen = inputStream.read(receiveBuffer);
+            receivedMessage = unpackEncryptedMessage(receiveBuffer);
+            recvCommand = extractCommand(receivedMessage);
+            recvParams = extractParams(receivedMessage);
+            if(!(recvCommand.equals("stat_key") && recvParams.length == 2)) {
+                return;
+            }
+
+            //Get aes key and iv in base64
+            String aesKeyBase64 = recvParams[0];
+            String ivBase64 = recvParams[1];
+
+            //Reply stat_key_ok
+            sendingMessage = "stat_key_ok()";
+            sendingBytes = packMessage(sendingMessage, true);
+            outputStream.write(sendingBytes);
+            outputStream.flush();
+
+            //For the file
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                if (bytesRead > 0 && buffer[0] == 0x03) { // 文件数据包
+                    fileOutputStream.write(buffer, 1, bytesRead - 1);
+                } else if (bytesRead == 1 && buffer[0] == (byte) 0xFF) { // 文件结束标记
+                    System.out.println("文件接收完成，已保存到 " + receiveFilePath);
+                    break;
+                } else {
+                    System.err.println("数据包格式错误");
+                    return;
+                }
+            }
+
+            //Decrypt the file
+            SecretKey aesKey = AESUtils.extractKeyFromBase64(aesKeyBase64);
+            IvParameterSpec iv = AESUtils.extractIVFromBase64(ivBase64);
+            AESUtils.decryptFile(receiveFilePath, "databases/watering_records/watering_record_" + serverId + ".db", aesKey, iv);
+
+            //Delete the temp file
+
+        } catch (IOException e) {
+            System.err.println("发生错误: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int deleteDeviceRequest() {
+
+    }
+
     //Pack (and encrypt) the sending message
     private byte[] packMessage(String message, boolean isEncrypted) {
         byte[] messageBytes;
         byte[] packedMessage = new byte[message.length() + 2];
         if(isEncrypted) {
-            //String encryptedMessage =     //Encrypt the message
-            //messageBytes = encryptedMessage.getBytes();   //Convert the encrypted message to byte array
+            String encryptedMessage;    //Encrypt the message
+            try {
+                encryptedMessage = rsaUtils.rsaEncrypt(message, rsaUtils.loadPublicKey(serverPubKey));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            messageBytes = encryptedMessage.getBytes();   //Convert the encrypted message to byte array
             packedMessage[0] = 0x02;    //Set the first byte of the packed byte array
         } else {
             messageBytes = message.getBytes(StandardCharsets.US_ASCII);
@@ -132,7 +231,7 @@ public class TCPClient {
         return packedMessage;
     }
 
-    //Unpack (and decrypt) the received message from the receive buffer
+    //Unpack the received message from the receive buffer
     private String unpackUnencryptedMessage(byte[] receiveBuffer) {
         if(receiveBuffer[0] != (byte)0x01) {    //If encrypted -> error
             return null;
@@ -161,9 +260,11 @@ public class TCPClient {
         System.arraycopy(receiveBuffer, 1, messageBlock, 0, messageBlock.length);
         String messageBlockStr = new String(messageBlock);
         String messagePT;
-
-        //messagePT =   //Decrypt the message
-        messagePT = null;
+        try {
+            messagePT = rsaUtils.rsaDecrypt(messageBlockStr, rsaUtils.loadPrivateKey(rsaUtils.readKeyFromFile(true)));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         return messagePT;
     }
