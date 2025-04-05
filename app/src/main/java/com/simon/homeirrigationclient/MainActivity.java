@@ -17,6 +17,7 @@ import com.simon.homeirrigationclient.model.DeviceInfo;
 import com.simon.homeirrigationclient.ui.main.home.DeviceCardGridViewAdapter;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,9 +49,11 @@ public class MainActivity extends AppCompatActivity {
         //Set GridView
         GridView gridView = findViewById(R.id.gridView_device_card);
 
-        DeviceInfo deviceInfo = new DeviceInfo(1L, "Test", "127.0.0.1", 10,1);
-        ArrayList<DeviceInfo> deviceInfoList = new ArrayList<>();
-        deviceInfoList.add(deviceInfo);
+        //DeviceInfo deviceInfo = new DeviceInfo(1L, "Test", "127.0.0.1", 10,1);
+        ArrayList<DeviceInfo> deviceInfoList = HICApplication.getInstance().deviceDatabaseHelper.getAllDeviceInfo();
+
+        //ArrayList<DeviceInfo> deviceInfoList = new ArrayList<>();
+        //deviceInfoList.add(deviceInfo);
 
         DeviceCardGridViewAdapter gridViewAdapter = new DeviceCardGridViewAdapter(this, deviceInfoList);
         gridView.setAdapter(gridViewAdapter);

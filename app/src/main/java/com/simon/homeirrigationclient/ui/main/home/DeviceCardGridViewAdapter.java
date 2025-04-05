@@ -58,10 +58,8 @@ public class DeviceCardGridViewAdapter extends BaseAdapter {
         deviceCardName.setText(deviceInfo.name);
         deviceCardAddress.setText(String.format("%s:%d", deviceInfo.host, deviceInfo.port));
         if(deviceInfo.mode == 1) {
-            deviceCardMode.setText("Automatic");
-        } else if(deviceInfo.mode == 2) {
             deviceCardMode.setText("Scheduled");
-        } else {    //mode == 3
+        } else {    //mode = 2
             deviceCardMode.setText("Manual");
         }
 

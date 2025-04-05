@@ -23,7 +23,7 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         //Create database tables
-        String createDevicesTableSQL = "CREATE TABLE servers (server_id TEXT PRIMARY KEY, name TEXT, client_add_time INTEGER, host TEXT, port INTEGER, mode INTEGER, water_amount REAL, automatic_humidity REAL, scheduled_freq INTEGER, scheduled_time TEXT)";
+        String createDevicesTableSQL = "CREATE TABLE servers (server_id TEXT PRIMARY KEY, name TEXT, server_pubkey TEXT, client_add_time INTEGER, host TEXT, port INTEGER, mode INTEGER, water_amount REAL, scheduled_freq INTEGER, scheduled_time TEXT)";
         db.execSQL(createDevicesTableSQL);
         /*
         String createWateringDataTableSQL = "CREATE TABLE watering_data (id INTEGER PRIMARY KEY)";
@@ -41,19 +41,19 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
 
     //Add a device to the database
     @SuppressLint("DefaultLocale")
-    public int insertDevice(String serverId, String name, String host, int port, int mode, double waterAmount, double automaticHumidity, int scheduledFreq, String scheduledTime) {
+    public int insertDevice(String serverId, String name, String serverPubkey, long clientAddTime, String host, int port, int mode, double waterAmount, int scheduledFreq, String scheduledTime) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         //Generate the record for the device
         ContentValues deviceRecord = new ContentValues();
         deviceRecord.put("server_id", serverId);
         deviceRecord.put("name", name);
-        deviceRecord.put("client_add_time", getAddTime());
+        deviceRecord.put("server_pubkey", serverPubkey);
+        deviceRecord.put("client_add_time", clientAddTime);
         deviceRecord.put("host", host);
         deviceRecord.put("port", port);
         deviceRecord.put("mode", mode);
         deviceRecord.put("water_amount", waterAmount);
-        deviceRecord.put("automatic_humidity", automaticHumidity);
         deviceRecord.put("scheduled_freq", scheduledFreq);
         deviceRecord.put("scheduled_time", scheduledTime);
 
@@ -64,8 +64,8 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
 
         //Create a record in the watering_data table on the client side, in order to temp the data from the server side (Raspberry Pi)
         //The timezone of the statistics will be server's
-        String createWateringDataTempSQL = String.format("CREATE TABLE watering_record_%s (day INTEGER PRIMARY KEY, time_of_watering INTEGER amount_of_watering REAL)", serverId);
-        db.execSQL(createWateringDataTempSQL);
+        //String createWateringDataTempSQL = String.format("CREATE TABLE watering_record_%s (day INTEGER PRIMARY KEY, time_of_watering INTEGER amount_of_watering REAL)", serverId);
+        //db.execSQL(createWateringDataTempSQL);
 
         db.close();
         return 0;   //Success
@@ -76,30 +76,32 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         String deleteDeviceInfoSQL = String.format("DELETE FROM servers WHERE server_id='%s'", serverId);
         db.execSQL(deleteDeviceInfoSQL);
-        String deleteWateringDataSQL = String.format("DROP TABLE IF EXISTS watering_record_%s", serverId);
-        db.execSQL(deleteWateringDataSQL);
+        //String deleteWateringDataSQL = String.format("DROP TABLE IF EXISTS watering_record_%s", serverId);
+        //db.execSQL(deleteWateringDataSQL);
         db.close();
     }
 
     //Get the basic information (server_id, name, host, port, mode and mode-related information) of all devices, to show device cards
     @SuppressLint("Range")
-    public List<DeviceInfo> getAllDeviceBasicInfo() {
-        List<DeviceInfo> deviceInfoList = new ArrayList<>();
+    public ArrayList<DeviceInfo> getAllDeviceInfo() {
+        ArrayList<DeviceInfo> deviceInfoList = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query("devices",new String[]{"id", "name", "host", "port", "mode", "water_amount", "automatic_humidity", "scheduled_freq"}, null, null, null, null, null, null);
+        Cursor cursor = db.query("servers",new String[]{"server_id", "name", "server_pubkey", "client_add_time", "host", "port", "mode", "water_amount", "scheduled_freq","scheduled_time"}, null, null, null, null, null, null);
         if(cursor != null) {
             if(cursor.moveToFirst()) {
                 do {
                     //For each record
-                    long id = cursor.getLong(cursor.getColumnIndex("id"));
+                    long serverId = cursor.getLong(cursor.getColumnIndex("server_id"));
                     String name = cursor.getString(cursor.getColumnIndex("name"));
+                    String serverPubkey = cursor.getString(cursor.getColumnIndex("server_pubkey"));
+                    long clientAddTime = cursor.getLong(cursor.getColumnIndex("client_add_time"));
                     String host = cursor.getString(cursor.getColumnIndex("host"));
                     int port = cursor.getInt(cursor.getColumnIndex("port"));
                     int mode = cursor.getInt(cursor.getColumnIndex("mode"));
                     double waterAmount = cursor.getDouble(cursor.getColumnIndex("water_amount"));
-                    double automaticHumidity = cursor.getDouble(cursor.getColumnIndex("automatic_humidity"));
                     int scheduledFreq = cursor.getInt(cursor.getColumnIndex("scheduled_freq"));
-                    DeviceInfo deviceInfo = new DeviceInfo(id, name, host, port, mode, waterAmount, automaticHumidity, scheduledFreq);
+                    String scheduledTime = cursor.getString(cursor.getColumnIndex("scheduled_time"));
+                    DeviceInfo deviceInfo = new DeviceInfo(serverId, name, serverPubkey, clientAddTime, host, port, mode, waterAmount, scheduledFreq, scheduledTime);
                     deviceInfoList.add(deviceInfo);
                 } while (cursor.moveToNext());
             }

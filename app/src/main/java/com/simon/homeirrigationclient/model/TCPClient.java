@@ -206,7 +206,7 @@ public class TCPClient {
     }
 
     public int deleteDeviceRequest() {
-
+        return 0;
     }
 
     //Pack (and encrypt) the sending message
