@@ -1,6 +1,7 @@
 package com.simon.homeirrigationclient.model;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,6 +26,7 @@ import javax.crypto.Cipher;
 
 public class RSAUtils {
 
+    private static RSAUtils instance;
     public static final String CLIENT_KEYS_DIR = "keys";
     public static final String CLIENT_PUBLIC_KEY_FILENAME = "client_pubkey.der";
     public static final String CLIENT_PRIVATE_KEY_FILENAME = "client_prikey.der";
@@ -33,14 +35,18 @@ public class RSAUtils {
     private final Context context;
 
     public RSAUtils(Context context) {
+        instance = this;
         this.context = context;
     }
 
+    public static RSAUtils getInstance() {
+        return instance;
+    }
     //Determine whether keypair is on the disk
     public boolean isKeypairFileExist() {
 
-        File prikeyFile = new File(context.getFilesDir(), CLIENT_PRIVATE_KEY_FILENAME);
-        File pubkeyFile = new File(context.getFilesDir(), CLIENT_PUBLIC_KEY_FILENAME);
+        File prikeyFile = new File(context.getFilesDir(), CLIENT_KEYS_DIR + "/" + CLIENT_PRIVATE_KEY_FILENAME);
+        File pubkeyFile = new File(context.getFilesDir(), CLIENT_KEYS_DIR + "/" + CLIENT_PUBLIC_KEY_FILENAME);
         return (prikeyFile.exists() && pubkeyFile.exists());
     }
 
@@ -76,6 +82,17 @@ public class RSAUtils {
 
     //Load private key from key string
     public PrivateKey loadPrivateKey(String privateKeyStr) throws Exception {
+        /*
+        privateKeyStr = privateKeyStr.trim().replaceAll("\\s", "");
+
+        // 确保Base64字符串长度是4的倍数
+        while (privateKeyStr.length() % 4 != 0) {
+            privateKeyStr += "=";
+        }
+
+         */
+        //boolean isNewLine = (privateKeyStr.charAt(privateKeyStr.length() - 1) == '\n');
+        //Log.println(Log.ERROR, "Does private key has new line", String.valueOf(isNewLine));
         byte[] keyBytes = Base64.getDecoder().decode(privateKeyStr);
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
@@ -114,10 +131,14 @@ public class RSAUtils {
                 fis = new FileInputStream(publicKeyFullPath);
             }
             BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
-            String line;
+            String line = reader.readLine();
+            content.append(line);
+            /*
             while ((line = reader.readLine()) != null) {
                 content.append(line).append("\n");
             }
+
+             */
         } catch (IOException e) {
             //e.printStackTrace();
         } finally {
@@ -130,6 +151,8 @@ public class RSAUtils {
                 }
             }
         }
+        //Delete the last char (\n)
+        //content.deleteCharAt(content.length() - 1);
         return content.toString();
     }
 
@@ -144,6 +167,7 @@ public class RSAUtils {
             if(!isPubkey) {   //private key
                 File privateKeyFullPath = new File(keysDir, CLIENT_PRIVATE_KEY_FILENAME);
                 fos = new FileOutputStream(privateKeyFullPath);
+                Log.println(Log.ERROR, "Private key generated", content);
 
             } else {    //public key
                 File publicKeyFullPath = new File(keysDir, CLIENT_PUBLIC_KEY_FILENAME);

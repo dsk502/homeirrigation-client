@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
 import java.util.Arrays;
 
 import javax.crypto.SecretKey;
@@ -29,7 +30,7 @@ public class TCPClient {
 
     public String serverPubKey;
 
-    public RSAUtils rsaUtils;
+    //public RSAUtils rsaUtils;
     public TCPClient(Context context, String serverHost, int serverPort) {
         this.context = context;
         this.serverHost = serverHost;
@@ -65,8 +66,8 @@ public class TCPClient {
 
                     //Send add_device(timestamp)
                     sendingMessage = "add_device(" + deviceInfo.clientAddTime + ")";
-                    sendingBytes = packMessage(sendingMessage, false);
-                    Log.println(Log.DEBUG, "Info: ", Arrays.toString(sendingBytes));
+                    sendingBytes = packMessageNoEncrypt(sendingMessage);
+                    //Log.println(Log.DEBUG, "Info: ", Arrays.toString(sendingBytes));
                     out.write(sendingBytes);
                     out.flush();
 
@@ -87,15 +88,19 @@ public class TCPClient {
                     //Store the server_pubkey
                     String serverPubKey = recvParams[0];
 
+
                     //Reply key_exchange_client(client_pubkey)
                     sendingMessage = "key_exchange_client(" + clientPubkey + ")";
-                    sendingBytes = packMessage(sendingMessage, false);
+                    boolean isNewLine = (clientPubkey.charAt(clientPubkey.length() - 1) == '\n');
+                    Log.println(Log.ERROR, "Is new line", "Client public key last char is n:" + isNewLine);
+                    sendingBytes = packMessageNoEncrypt(sendingMessage);
                     out.write(sendingBytes);
                     out.flush();
 
                     //Receive and process request_add_param(server_id) -- encrypted
                     receiveLen = in.read(receiveBuffer);
                     receivedMessage = unpackEncryptedMessage(receiveBuffer);
+                    Log.println(Log.ERROR, "Received Message:", receivedMessage);
                     if(receivedMessage == null) {
                         return -1;
                     }
@@ -105,10 +110,12 @@ public class TCPClient {
                         return -1;
                     }
                     String serverId = recvParams[0];
+                    Log.println(Log.ERROR, "Received", "Received request_add_param");
 
                     //Reply reply_add_param(mode,water_amount,scheduled_freq,scheduled_time) -- encrypted
                     sendingMessage = "reply_add_param(" + deviceInfo.mode + "," + deviceInfo.waterAmount + "," + deviceInfo.scheduledFreq + "," + deviceInfo.scheduledTime + ")";
-                    sendingBytes = packMessage(sendingMessage, true);
+                    sendingBytes = packMessageEncrypt(sendingMessage);
+                    Log.println(Log.ERROR,"First encrypted message:", new String(sendingBytes));
                     out.write(sendingBytes);
                     out.flush();
 
@@ -131,7 +138,7 @@ public class TCPClient {
 
                     //Reply finish_add_client()
                     sendingMessage = "finish_add_client()";
-                    sendingBytes = packMessage(sendingMessage, true);
+                    sendingBytes = packMessageEncrypt(sendingMessage);
                     out.write(sendingBytes);
                     out.flush();
 
@@ -183,7 +190,7 @@ public class TCPClient {
 
             //Sending download_stat()
             sendingMessage = "download_stat()";
-            sendingBytes = packMessage(sendingMessage, true);
+            sendingBytes = packMessageEncrypt(sendingMessage);
             outputStream.write(sendingBytes);
             outputStream.flush();
 
@@ -202,7 +209,7 @@ public class TCPClient {
 
             //Reply stat_key_ok
             sendingMessage = "stat_key_ok()";
-            sendingBytes = packMessage(sendingMessage, true);
+            sendingBytes = packMessageEncrypt(sendingMessage);
             outputStream.write(sendingBytes);
             outputStream.flush();
 
@@ -242,7 +249,41 @@ public class TCPClient {
         return 0;
     }
 
+    private byte[] packMessageNoEncrypt(String message) {
+        //Create result array
+        byte[] packedMessage = new byte[message.length() + 2];
+
+        //Convert the input string to byte array
+        byte[] messageBytes = message.getBytes(StandardCharsets.US_ASCII);
+
+        //Add the tag
+        packedMessage[0] = 0x01;
+
+        //Copy the input byte array to the result array
+        System.arraycopy(messageBytes, 0, packedMessage, 1, messageBytes.length);   //Copy the message block to the packed array
+
+        //Add the ending '\n'
+        packedMessage[packedMessage.length - 1] = (byte)10;   //10 = '\n', set the last byte of the packed array
+
+        //Log.println(Log.DEBUG, "packedMessage[end - 2]", String.valueOf(packedMessage[packedMessage.length - 2]));
+        //Return the result
+        return packedMessage;
+
+    }
+
+    private byte[] packMessageEncrypt(String message) {
+        //Encrypt the message
+        try {
+            RSAUtils rsaUtils = RSAUtils.getInstance();
+            String encryptedMessage = rsaUtils.rsaEncrypt(message, rsaUtils.loadPublicKey(serverPubKey));
+            return packMessageNoEncrypt(encryptedMessage);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     //Pack (and encrypt) the sending message
+    /*
     private byte[] packMessage(String message, boolean isEncrypted) {
         byte[] messageBytes;
         byte[] packedMessage = new byte[message.length() + 2];
@@ -264,6 +305,8 @@ public class TCPClient {
         return packedMessage;
     }
 
+     */
+
     //Unpack the received message from the receive buffer
     private String unpackUnencryptedMessage(byte[] receiveBuffer) {
         if(receiveBuffer[0] != (byte)0x01) {    //If encrypted -> error
@@ -284,17 +327,27 @@ public class TCPClient {
         if(receiveBuffer[0] != 0x02) {  //If not encrypted -> error
             return null;
         }
+        //Log.println(Log.ERROR, "Receive buffer Tag", "OK");
         int indexOfEndTag = findIndexOf(receiveBuffer, (byte)10);
         if(indexOfEndTag == -1) {
             return null;    //The end of the message is not '\n', which is an error
         }
+        //Log.println(Log.ERROR, "Receive buffer n char", "OK");
         //copy the message block to the array messageBlock
         byte[] messageBlock = new byte[indexOfEndTag];
         System.arraycopy(receiveBuffer, 1, messageBlock, 0, messageBlock.length);
         String messageBlockStr = new String(messageBlock);
-        String messagePT;
+        //String messageBlockStr = "fC8gXztvEAuxMrmvgeg8FQ5J5VRSLQj8OW/UV8S0XpSLR99a8EhxO4layFyAif5Hu/5IcCQVZHaDbNxCgB1DhfbDTt1RFeMP6LQ3Xv4XYOzsusC3rgkDrISgOJCQPf2N8fFGuSMORe/tVEQvQN0u0lyOToV1U/nDgpHPfvuwOR5LOK9TB/A+sFlEEA0gqi61zFkO1FfEMQii4laQcBPkLYQ5OajiDUrm9BDQIhruUj9Z/WE9JBjUFurameRCeBUjJQ6Pa+/da3ePAV2xazQCEmCH3JikX++h60qRyGeYnnz2x5yMnlNFEDsjj1e1CF5NuYu+3TyLRm1iuGeNqyvkmA==";
+        String messagePT = "";
         try {
-            messagePT = rsaUtils.rsaDecrypt(messageBlockStr, rsaUtils.loadPrivateKey(rsaUtils.readKeyFromFile(true)));
+            RSAUtils rsaUtils = RSAUtils.getInstance();
+            String privateKeyStr = rsaUtils.readKeyFromFile(false);
+            //Log.println(Log.ERROR, "Private key:", privateKeyStr);
+            PrivateKey rsaPrivateKey = rsaUtils.loadPrivateKey(privateKeyStr);
+            Log.println(Log.ERROR, "Private key loaded", "OK");
+            Log.println(Log.ERROR, "Cipher Text:", messageBlockStr);
+            Log.println(Log.ERROR, "Cipher text length:", String.valueOf(messageBlockStr.length()));
+            messagePT = rsaUtils.rsaDecrypt(messageBlockStr, rsaPrivateKey);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

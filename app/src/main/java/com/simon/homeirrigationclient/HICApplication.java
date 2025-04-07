@@ -30,8 +30,10 @@ public class HICApplication extends Application {
 
         //2. Init the rsaUtils object
         rsaUtils = new RSAUtils(this);
+
         if(!rsaUtils.isKeypairFileExist()) {
             try {
+                Log.println(Log.ERROR, "Is keypair exist:", "False");
                 rsaUtils.generateRSAKeyPair();
             } catch (NoSuchAlgorithmException e) {
                 Log.println(Log.ERROR, "Error", e.toString());
