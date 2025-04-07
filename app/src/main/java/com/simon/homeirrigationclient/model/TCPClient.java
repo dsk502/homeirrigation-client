@@ -334,10 +334,12 @@ public class TCPClient {
         }
         //Log.println(Log.ERROR, "Receive buffer n char", "OK");
         //copy the message block to the array messageBlock
-        byte[] messageBlock = new byte[indexOfEndTag];
+        byte[] messageBlock = new byte[indexOfEndTag - 1];
+        //Log.println(Log.ERROR, "messageblock length:", String.valueOf(indexOfEndTag));
         System.arraycopy(receiveBuffer, 1, messageBlock, 0, messageBlock.length);
         String messageBlockStr = new String(messageBlock);
         //String messageBlockStr = "fC8gXztvEAuxMrmvgeg8FQ5J5VRSLQj8OW/UV8S0XpSLR99a8EhxO4layFyAif5Hu/5IcCQVZHaDbNxCgB1DhfbDTt1RFeMP6LQ3Xv4XYOzsusC3rgkDrISgOJCQPf2N8fFGuSMORe/tVEQvQN0u0lyOToV1U/nDgpHPfvuwOR5LOK9TB/A+sFlEEA0gqi61zFkO1FfEMQii4laQcBPkLYQ5OajiDUrm9BDQIhruUj9Z/WE9JBjUFurameRCeBUjJQ6Pa+/da3ePAV2xazQCEmCH3JikX++h60qRyGeYnnz2x5yMnlNFEDsjj1e1CF5NuYu+3TyLRm1iuGeNqyvkmA==";
+
         String messagePT = "";
         try {
             RSAUtils rsaUtils = RSAUtils.getInstance();
