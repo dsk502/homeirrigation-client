@@ -91,7 +91,7 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
             if(cursor.moveToFirst()) {
                 do {
                     //For each record
-                    long serverId = cursor.getLong(cursor.getColumnIndex("server_id"));
+                    String serverId = cursor.getString(cursor.getColumnIndex("server_id"));
                     String name = cursor.getString(cursor.getColumnIndex("name"));
                     String serverPubkey = cursor.getString(cursor.getColumnIndex("server_pubkey"));
                     long clientAddTime = cursor.getLong(cursor.getColumnIndex("client_add_time"));

@@ -65,7 +65,7 @@ public class DeviceAddActivity extends AppCompatActivity {
                 long timestamp = DeviceDatabaseHelper.getAddTime();
 
                 //Create the DeviceInfo object and its TCP client
-                DeviceInfo newDeviceInfo = new DeviceInfo(0L, newName, clientPubkey, timestamp, newAddress, newPort, 0);
+                DeviceInfo newDeviceInfo = new DeviceInfo("0", newName, clientPubkey, timestamp, newAddress, newPort, 0);
                 newDeviceInfo.tcpClient = new TCPClient(getApplicationContext(), newAddress, newPort);
                 int addDeviceResult = newDeviceInfo.tcpClient.addDeviceRequest(clientPubkey, newDeviceInfo);
                 if(addDeviceResult == 0) {

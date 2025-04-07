@@ -6,7 +6,7 @@ import android.content.Context;
 public class DeviceInfo {
 
     //The ID of the device
-    public long serverId;
+    public String serverId;
 
     //The name of the device
     public String name;
@@ -51,7 +51,7 @@ public class DeviceInfo {
     public WateringRecordDatabaseHelper wateringRecordDatabaseHelper;
 
     //Constructor with all parameters
-    public DeviceInfo(long serverId, String name, String serverPubkey, long clientAddTime, String host, int port, int mode, double waterAmount, int scheduledFreq, String scheduledTime) {
+    public DeviceInfo(String serverId, String name, String serverPubkey, long clientAddTime, String host, int port, int mode, double waterAmount, int scheduledFreq, String scheduledTime) {
         this.serverId = serverId;
         this.name = name;
         this.serverPubkey = serverPubkey;
@@ -66,7 +66,7 @@ public class DeviceInfo {
     }
 
     //Constructor with parameters that do not have a default value
-    public DeviceInfo(long serverId, String name, String serverPubkey, long clientAddTime, String host, int port, int mode) {
+    public DeviceInfo(String serverId, String name, String serverPubkey, long clientAddTime, String host, int port, int mode) {
         this.serverId = serverId;
         this.name = name;
         this.serverPubkey = serverPubkey;

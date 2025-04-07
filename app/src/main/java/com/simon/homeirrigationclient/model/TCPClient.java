@@ -67,7 +67,6 @@ public class TCPClient {
                     //Send add_device(timestamp)
                     sendingMessage = "add_device(" + deviceInfo.clientAddTime + ")";
                     sendingBytes = packMessageNoEncrypt(sendingMessage);
-                    //Log.println(Log.DEBUG, "Info: ", Arrays.toString(sendingBytes));
                     out.write(sendingBytes);
                     out.flush();
 
@@ -86,13 +85,12 @@ public class TCPClient {
                         return -1;
                     }
                     //Store the server_pubkey
-                    String serverPubKey = recvParams[0];
+                    serverPubKey = new String(recvParams[0]);
+                    Log.println(Log.ERROR, "Server public key:", serverPubKey);
 
 
                     //Reply key_exchange_client(client_pubkey)
                     sendingMessage = "key_exchange_client(" + clientPubkey + ")";
-                    boolean isNewLine = (clientPubkey.charAt(clientPubkey.length() - 1) == '\n');
-                    Log.println(Log.ERROR, "Is new line", "Client public key last char is n:" + isNewLine);
                     sendingBytes = packMessageNoEncrypt(sendingMessage);
                     out.write(sendingBytes);
                     out.flush();
@@ -109,11 +107,13 @@ public class TCPClient {
                     if(!(recvCommand.equals("request_add_param") && recvParams.length == 1)) {
                         return -1;
                     }
-                    String serverId = recvParams[0];
+                    String serverId = new String(recvParams[0]);
                     Log.println(Log.ERROR, "Received", "Received request_add_param");
 
                     //Reply reply_add_param(mode,water_amount,scheduled_freq,scheduled_time) -- encrypted
                     sendingMessage = "reply_add_param(" + deviceInfo.mode + "," + deviceInfo.waterAmount + "," + deviceInfo.scheduledFreq + "," + deviceInfo.scheduledTime + ")";
+                    Log.println(Log.ERROR, "Server public key:", serverPubKey);
+
                     sendingBytes = packMessageEncrypt(sendingMessage);
                     Log.println(Log.ERROR,"First encrypted message:", new String(sendingBytes));
                     out.write(sendingBytes);
@@ -122,15 +122,16 @@ public class TCPClient {
                     //Receive finish_add_server() -- encrypted
                     receiveLen = in.read(receiveBuffer);
                     receivedMessage = unpackEncryptedMessage(receiveBuffer);
+                    Log.println(Log.ERROR, "Finish add server: ", receivedMessage);
                     recvCommand = extractCommand(receivedMessage);
-                    recvParams = extractParams(receivedMessage);
-                    if(!(recvCommand.equals("request_add_param") && recvParams.length == 0)) {
+                    //recvParams = extractParams(receivedMessage);
+                    if(!recvCommand.equals("finish_add_server")) {
                         return -1;
                     }
-
+                    Log.println(Log.ERROR, "After finish add server", "Yes");
 
                     //Update the server id and server public key in deviceInfo object
-                    deviceInfo.serverId = Long.parseLong(serverId);
+                    deviceInfo.serverId = serverId;
                     deviceInfo.serverPubkey = serverPubKey;
 
                     //Save the data to the database
@@ -139,6 +140,7 @@ public class TCPClient {
                     //Reply finish_add_client()
                     sendingMessage = "finish_add_client()";
                     sendingBytes = packMessageEncrypt(sendingMessage);
+                    Log.println(Log.ERROR, "Finish add client: ", new String(sendingBytes));
                     out.write(sendingBytes);
                     out.flush();
 
