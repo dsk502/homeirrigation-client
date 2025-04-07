@@ -1,6 +1,9 @@
 package com.simon.homeirrigationclient;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.GridView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -14,6 +17,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.simon.homeirrigationclient.databinding.ActivityMainBinding;
 import com.simon.homeirrigationclient.model.DeviceInfo;
+import com.simon.homeirrigationclient.ui.main.home.DeviceAddActivity;
 import com.simon.homeirrigationclient.ui.main.home.DeviceCardGridViewAdapter;
 
 import java.util.ArrayList;
@@ -46,15 +50,19 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navViewMain, navController);
 
+        //Set the add device button
+        Button buttonAddDevice = findViewById(R.id.button_add_devices);
+        buttonAddDevice.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, DeviceAddActivity.class);
+                startActivity(intent);
+            }
+        });
+
         //Set GridView
         GridView gridView = findViewById(R.id.gridView_device_card);
-
-        //DeviceInfo deviceInfo = new DeviceInfo(1L, "Test", "127.0.0.1", 10,1);
-        ArrayList<DeviceInfo> deviceInfoList = HICApplication.getInstance().deviceDatabaseHelper.getAllDeviceInfo();
-
-        //ArrayList<DeviceInfo> deviceInfoList = new ArrayList<>();
-        //deviceInfoList.add(deviceInfo);
-
+        ArrayList<DeviceInfo> deviceInfoList = HICApplication.getInstance().servers;
         DeviceCardGridViewAdapter gridViewAdapter = new DeviceCardGridViewAdapter(this, deviceInfoList);
         gridView.setAdapter(gridViewAdapter);
     }

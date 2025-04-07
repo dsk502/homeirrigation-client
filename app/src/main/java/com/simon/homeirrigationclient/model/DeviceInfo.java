@@ -1,5 +1,7 @@
 package com.simon.homeirrigationclient.model;
 
+import android.content.Context;
+
 //Class to describe a device (server)
 public class DeviceInfo {
 
@@ -49,8 +51,8 @@ public class DeviceInfo {
     public WateringRecordDatabaseHelper wateringRecordDatabaseHelper;
 
     //Constructor with all parameters
-    public DeviceInfo(long id, String name, String serverPubkey, long clientAddTime, String host, int port, int mode, double waterAmount, int scheduledFreq, String scheduledTime) {
-        this.serverId = id;
+    public DeviceInfo(long serverId, String name, String serverPubkey, long clientAddTime, String host, int port, int mode, double waterAmount, int scheduledFreq, String scheduledTime) {
+        this.serverId = serverId;
         this.name = name;
         this.serverPubkey = serverPubkey;
         this.clientAddTime = clientAddTime;
@@ -60,11 +62,12 @@ public class DeviceInfo {
         this.waterAmount = waterAmount;
         this.scheduledFreq = scheduledFreq;
         this.scheduledTime = scheduledTime;
+        //
     }
 
     //Constructor with parameters that do not have a default value
-    public DeviceInfo(long id, String name, String serverPubkey, long clientAddTime, String host, int port, int mode) {
-        this.serverId = id;
+    public DeviceInfo(long serverId, String name, String serverPubkey, long clientAddTime, String host, int port, int mode) {
+        this.serverId = serverId;
         this.name = name;
         this.serverPubkey = serverPubkey;
         this.clientAddTime = clientAddTime;
@@ -73,5 +76,11 @@ public class DeviceInfo {
         this.mode = mode;
         this.waterAmount = 100.0;
         this.scheduledFreq = 2;
+    }
+
+    //Init the TCPClient and WateringRecordHelper objects after the creation of DeviceInfo object
+    public void initNetAndRecHelper(Context context) {
+        tcpClient = new TCPClient(context, this.host, this.port);
+        wateringRecordDatabaseHelper = new WateringRecordDatabaseHelper(context, "watering_record_" + this.serverId + ".db");
     }
 }

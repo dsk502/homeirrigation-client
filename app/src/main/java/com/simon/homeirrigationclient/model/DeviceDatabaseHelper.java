@@ -41,21 +41,21 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
 
     //Add a device to the database
     @SuppressLint("DefaultLocale")
-    public int insertDevice(String serverId, String name, String serverPubkey, long clientAddTime, String host, int port, int mode, double waterAmount, int scheduledFreq, String scheduledTime) {
+    public int insertDevice(DeviceInfo deviceInfo) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         //Generate the record for the device
         ContentValues deviceRecord = new ContentValues();
-        deviceRecord.put("server_id", serverId);
-        deviceRecord.put("name", name);
-        deviceRecord.put("server_pubkey", serverPubkey);
-        deviceRecord.put("client_add_time", clientAddTime);
-        deviceRecord.put("host", host);
-        deviceRecord.put("port", port);
-        deviceRecord.put("mode", mode);
-        deviceRecord.put("water_amount", waterAmount);
-        deviceRecord.put("scheduled_freq", scheduledFreq);
-        deviceRecord.put("scheduled_time", scheduledTime);
+        deviceRecord.put("server_id", deviceInfo.serverId);
+        deviceRecord.put("name", deviceInfo.name);
+        deviceRecord.put("server_pubkey", deviceInfo.serverPubkey);
+        deviceRecord.put("client_add_time", deviceInfo.clientAddTime);
+        deviceRecord.put("host", deviceInfo.host);
+        deviceRecord.put("port", deviceInfo.port);
+        deviceRecord.put("mode", deviceInfo.mode);
+        deviceRecord.put("water_amount", deviceInfo.waterAmount);
+        deviceRecord.put("scheduled_freq", deviceInfo.scheduledFreq);
+        deviceRecord.put("scheduled_time", deviceInfo.scheduledTime);
 
         //Insert the record to the table "devices"
         if(db.insert("servers", null, deviceRecord) == -1L) {

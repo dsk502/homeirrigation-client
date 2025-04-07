@@ -3,10 +3,12 @@ package com.simon.homeirrigationclient.model;
 import android.content.Context;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -23,6 +25,7 @@ import javax.crypto.Cipher;
 
 public class RSAUtils {
 
+    public static final String CLIENT_KEYS_DIR = "keys";
     public static final String CLIENT_PUBLIC_KEY_FILENAME = "client_pubkey.der";
     public static final String CLIENT_PRIVATE_KEY_FILENAME = "client_prikey.der";
 
@@ -33,17 +36,33 @@ public class RSAUtils {
         this.context = context;
     }
 
+    //Determine whether keypair is on the disk
+    public boolean isKeypairFileExist() {
+
+        File prikeyFile = new File(context.getFilesDir(), CLIENT_PRIVATE_KEY_FILENAME);
+        File pubkeyFile = new File(context.getFilesDir(), CLIENT_PUBLIC_KEY_FILENAME);
+        return (prikeyFile.exists() && pubkeyFile.exists());
+    }
+
     //Generate Keypair
     //Public key is keyPair.getPublic
     //Private key is keyPair.getPrivate
-    public KeyPair generateRSAKeyPair() throws NoSuchAlgorithmException {
+    public void generateRSAKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(2048);
-        return keyGen.generateKeyPair();
+        KeyPair keyPair = keyGen.generateKeyPair();
+        byte[] privateKeyBytes = keyPair.getPrivate().getEncoded();
+        byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
+        String encodedPrikey = encodeKey(privateKeyBytes);
+        String encodedPubkey = encodeKey(publicKeyBytes);
+
+
+        writeKeyToFile(false, encodedPrikey);
+        writeKeyToFile(true, encodedPubkey);
     }
 
     //Encode the key to string
-    public String encodeKey(byte[] keyBytes) {
+    private String encodeKey(byte[] keyBytes) {
         return Base64.getEncoder().encodeToString(keyBytes);
     }
 
@@ -81,16 +100,18 @@ public class RSAUtils {
     }
 
     //Read the key from file
-    //false = public key, true = private key
-    public String readKeyFromFile(boolean keyType) {
+    public String readKeyFromFile(boolean isPubkey) {
         FileInputStream fis = null;
         StringBuilder content = new StringBuilder();
         try {
             // 打开文件输入流，文件存储在内部存储的私有目录下
-            if(keyType) {   //Private key
-                fis = context.openFileInput(CLIENT_PRIVATE_KEY_FILENAME);
+            File keysDir = new File(context.getFilesDir(), CLIENT_KEYS_DIR);
+            if(!isPubkey) {   //Private key
+                File privateKeyFullPath = new File(keysDir, CLIENT_PRIVATE_KEY_FILENAME);
+                fis = new FileInputStream(privateKeyFullPath);
             } else {    //Public key
-                fis = context.openFileInput(CLIENT_PUBLIC_KEY_FILENAME);
+                File publicKeyFullPath = new File(keysDir, CLIENT_PUBLIC_KEY_FILENAME);
+                fis = new FileInputStream(publicKeyFullPath);
             }
             BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
             String line;
@@ -113,16 +134,24 @@ public class RSAUtils {
     }
 
     // 写入内部存储私有文件
-    //false = public key, true = private key
-    public void writeKeyToFile(boolean keyType, String content) {
+    private void writeKeyToFile(boolean isPubkey, String content) {
         FileOutputStream fos = null;
         try {
-            if(keyType) {   //private key
-                fos = context.openFileOutput(CLIENT_PRIVATE_KEY_FILENAME, Context.MODE_PRIVATE);
-            } else {    //public key
-                fos = context.openFileOutput(CLIENT_PUBLIC_KEY_FILENAME, Context.MODE_PRIVATE);
+            File keysDir = new File(context.getFilesDir(), CLIENT_KEYS_DIR);
+            if(!keysDir.exists()) {
+                keysDir.mkdirs();
             }
-            fos.write(content.getBytes());
+            if(!isPubkey) {   //private key
+                File privateKeyFullPath = new File(keysDir, CLIENT_PRIVATE_KEY_FILENAME);
+                fos = new FileOutputStream(privateKeyFullPath);
+
+            } else {    //public key
+                File publicKeyFullPath = new File(keysDir, CLIENT_PUBLIC_KEY_FILENAME);
+                fos = new FileOutputStream(publicKeyFullPath);
+
+            }
+            fos.write(content.getBytes(StandardCharsets.US_ASCII));
+            fos.flush();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

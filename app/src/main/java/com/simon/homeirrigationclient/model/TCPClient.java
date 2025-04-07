@@ -3,6 +3,10 @@ package com.simon.homeirrigationclient.model;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
+
+import com.simon.homeirrigationclient.HICApplication;
+import com.simon.homeirrigationclient.ui.main.home.DeviceAddActivity;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,6 +14,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -32,109 +37,136 @@ public class TCPClient {
     }
 
 
-    public int addDeviceRequest(long timeStamp, String clientPubkey, DeviceInfo deviceInfo) {
-
-        try (Socket socket = new Socket(serverHost, serverPort)) {
-            //InputStream is used for reading messages coming from server
-            InputStream in = socket.getInputStream();
-
-            //OutputStream is used for sending messages to the server
-            OutputStream out = socket.getOutputStream();
-
-            //Variables for sending and receiving
-            byte[] sendingBytes;
-            String sendingMessage;
-
-            byte[] receiveBuffer = new byte[1024];
-            int receiveLen;
-            String receivedMessage;
-            String recvCommand;
-            String[] recvParams;
-
-            //Send add_device(timestamp)
-            sendingMessage = "add_device(" + timeStamp + ")";
-            sendingBytes = packMessage(sendingMessage, false);
-            out.write(sendingBytes);
-            out.flush();
-
-            //Receive key_exchange_server(server_pubkey)
-            receiveLen = in.read(receiveBuffer);
-            receivedMessage = unpackUnencryptedMessage(receiveBuffer);
-            if(receivedMessage == null) {   //If encrypted or no end tag -> error
-                return -1;
+    public int addDeviceRequest(String clientPubkey, DeviceInfo deviceInfo) {
+        final int[] result = new int[1];
+        Thread addDeviceThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                result[0] = networkOperation();
             }
 
-            //Retrieve command and arguments
-            recvCommand = extractCommand(receivedMessage);
-            recvParams = extractParams(receivedMessage);
-            if(!(recvCommand.equals("key_exchange_server") && recvParams.length == 1)) {
-                return -1;
+            public int networkOperation() {
+                try (Socket socket = new Socket(serverHost, serverPort)) {
+                    //InputStream is used for reading messages coming from server
+                    InputStream in = socket.getInputStream();
+
+                    //OutputStream is used for sending messages to the server
+                    OutputStream out = socket.getOutputStream();
+
+                    //Variables for sending and receiving
+                    byte[] sendingBytes;
+                    String sendingMessage;
+
+                    byte[] receiveBuffer = new byte[1024];
+                    int receiveLen;
+                    String receivedMessage;
+                    String recvCommand;
+                    String[] recvParams;
+
+                    //Send add_device(timestamp)
+                    sendingMessage = "add_device(" + deviceInfo.clientAddTime + ")";
+                    sendingBytes = packMessage(sendingMessage, false);
+                    Log.println(Log.DEBUG, "Info: ", Arrays.toString(sendingBytes));
+                    out.write(sendingBytes);
+                    out.flush();
+
+                    //Receive key_exchange_server(server_pubkey)
+                    receiveLen = in.read(receiveBuffer);
+                    receivedMessage = unpackUnencryptedMessage(receiveBuffer);
+                    if(receivedMessage == null) {   //If encrypted or no end tag -> error
+                        //Toast.makeText(context, "Message format error", Toast.LENGTH_SHORT).show();
+                        return 1;
+                    }
+
+                    //Retrieve command and arguments
+                    recvCommand = extractCommand(receivedMessage);
+                    recvParams = extractParams(receivedMessage);
+                    if(!(recvCommand.equals("key_exchange_server") && recvParams.length == 1)) {
+                        return -1;
+                    }
+                    //Store the server_pubkey
+                    String serverPubKey = recvParams[0];
+
+                    //Reply key_exchange_client(client_pubkey)
+                    sendingMessage = "key_exchange_client(" + clientPubkey + ")";
+                    sendingBytes = packMessage(sendingMessage, false);
+                    out.write(sendingBytes);
+                    out.flush();
+
+                    //Receive and process request_add_param(server_id) -- encrypted
+                    receiveLen = in.read(receiveBuffer);
+                    receivedMessage = unpackEncryptedMessage(receiveBuffer);
+                    if(receivedMessage == null) {
+                        return -1;
+                    }
+                    recvCommand = extractCommand(receivedMessage);
+                    recvParams = extractParams(receivedMessage);
+                    if(!(recvCommand.equals("request_add_param") && recvParams.length == 1)) {
+                        return -1;
+                    }
+                    String serverId = recvParams[0];
+
+                    //Reply reply_add_param(mode,water_amount,scheduled_freq,scheduled_time) -- encrypted
+                    sendingMessage = "reply_add_param(" + deviceInfo.mode + "," + deviceInfo.waterAmount + "," + deviceInfo.scheduledFreq + "," + deviceInfo.scheduledTime + ")";
+                    sendingBytes = packMessage(sendingMessage, true);
+                    out.write(sendingBytes);
+                    out.flush();
+
+                    //Receive finish_add_server() -- encrypted
+                    receiveLen = in.read(receiveBuffer);
+                    receivedMessage = unpackEncryptedMessage(receiveBuffer);
+                    recvCommand = extractCommand(receivedMessage);
+                    recvParams = extractParams(receivedMessage);
+                    if(!(recvCommand.equals("request_add_param") && recvParams.length == 0)) {
+                        return -1;
+                    }
+
+
+                    //Update the server id and server public key in deviceInfo object
+                    deviceInfo.serverId = Long.parseLong(serverId);
+                    deviceInfo.serverPubkey = serverPubKey;
+
+                    //Save the data to the database
+                    HICApplication.getInstance().deviceDatabaseHelper.insertDevice(deviceInfo);
+
+                    //Reply finish_add_client()
+                    sendingMessage = "finish_add_client()";
+                    sendingBytes = packMessage(sendingMessage, true);
+                    out.write(sendingBytes);
+                    out.flush();
+
+                    //Close the input and output stream
+                    in.close();
+                    out.close();
+                    return 0;
+
+                } catch (IOException e) {
+                    Log.println(Log.ERROR, "Error", "Network Error!");
+                    e.printStackTrace();
+                    return -1;
+                } catch (IndexOutOfBoundsException e) {
+                    Log.println(Log.ERROR,"Error", "Message Error!");
+                    return -1;
+                }
             }
-            //Store the server_pubkey
-            String serverPubKey = recvParams[0];
+        });
 
-            //Reply key_exchange_client(client_pubkey)
-            sendingMessage = "key_exchange_client(" + clientPubkey + ")";
-            sendingBytes = packMessage(sendingMessage, false);
-            out.write(sendingBytes);
-            out.flush();
-
-            //Receive and process request_add_param(server_id) -- encrypted
-            receiveLen = in.read(receiveBuffer);
-            receivedMessage = unpackEncryptedMessage(receiveBuffer);
-            if(receivedMessage == null) {
-                return -1;
-            }
-            recvCommand = extractCommand(receivedMessage);
-            recvParams = extractParams(receivedMessage);
-            if(!(recvCommand.equals("request_add_param") && recvParams.length == 1)) {
-                return -1;
-            }
-            String serverId = recvParams[0];
-
-            //Reply reply_add_param(mode,water_amount,scheduled_freq,scheduled_time) -- encrypted
-            sendingMessage = "reply_add_param(" + deviceInfo.mode + "," + deviceInfo.waterAmount + "," + deviceInfo.scheduledFreq + "," + deviceInfo.scheduledTime + ")";
-            sendingBytes = packMessage(sendingMessage, true);
-            out.write(sendingBytes);
-            out.flush();
-
-            //Receive finish_add_server() -- encrypted
-            receiveLen = in.read(receiveBuffer);
-            receivedMessage = unpackEncryptedMessage(receiveBuffer);
-            recvCommand = extractCommand(receivedMessage);
-            recvParams = extractParams(receivedMessage);
-            if(!(recvCommand.equals("request_add_param") && recvParams.length == 0)) {
-                return -1;
-            }
-            //Save the data to the database
-
-            //Reply finish_add_client()
-            sendingMessage = "finish_add_client()";
-            sendingBytes = packMessage(sendingMessage, true);
-            out.write(sendingBytes);
-            out.flush();
-
-            //Close the input and output stream
-            in.close();
-            out.close();
-            return 0;
-
-        } catch (IOException e) {
-            Log.println(Log.ERROR, "Error", "Network Error!");
-            return -1;
-        } catch (IndexOutOfBoundsException e) {
-            Log.println(Log.ERROR,"Error", "Message Error!");
+        addDeviceThread.start();
+        try {
+            addDeviceThread.join();
+        } catch (InterruptedException e) {
             return -1;
         }
+        return result[0];
+
     }
 
     public void downloadStatRequest(String serverId) {
-        String serverAddress = "127.0.0.1";
-        int serverPort = 8080;
+
         String receiveFilePath = "temp/watering_record_" + serverId + "_encrypted.db";
 
         try (
-            Socket socket = new Socket(serverAddress, serverPort);
+            Socket socket = new Socket(serverHost, serverPort);
             InputStream inputStream = socket.getInputStream();
             OutputStream outputStream = socket.getOutputStream();
             FileOutputStream fileOutputStream = new FileOutputStream(receiveFilePath);
@@ -206,6 +238,7 @@ public class TCPClient {
     }
 
     public int deleteDeviceRequest() {
+
         return 0;
     }
 

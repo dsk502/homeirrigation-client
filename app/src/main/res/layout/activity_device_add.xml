@@ -23,16 +23,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_device_add"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="30dp"
         android:text="@string/text_name"/>
 
     <EditText
         android:id="@+id/editText_device_add_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="@id/textView_device_add_name"
+        app:layout_constraintStart_toEndOf="@id/textView_device_add_name"
         app:layout_constraintBottom_toBottomOf="@id/textView_device_add_name"
         android:layout_marginStart="10dp"
         android:ems="10"
@@ -45,14 +45,14 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="@id/textView_device_add_name"
         app:layout_constraintTop_toBottomOf="@id/textView_device_add_name"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="30dp"
         android:text="@string/text_ip_address"/>
 
     <EditText
         android:id="@+id/editText_ip_address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="@+id/textView_ip_address"
+        app:layout_constraintStart_toEndOf="@+id/textView_ip_address"
         app:layout_constraintBottom_toBottomOf="@id/textView_ip_address"
         android:layout_marginStart="10dp"
         android:ems="10"
@@ -65,14 +65,14 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/textView_ip_address"
         app:layout_constraintStart_toStartOf="@id/textView_device_add_name"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="30dp"
         android:text="@string/text_port" />
 
     <EditText
         android:id="@+id/editText_port"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="@+id/textView_port"
+        app:layout_constraintStart_toEndOf="@+id/textView_port"
         app:layout_constraintBottom_toBottomOf="@+id/textView_port"
         android:layout_marginStart="10dp"
         android:ems="10"
@@ -80,6 +80,7 @@
         android:text="" />
 
     <Button
+        android:id="@+id/button_device_add_ok"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
