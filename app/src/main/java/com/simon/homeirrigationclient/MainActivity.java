@@ -52,25 +52,17 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navViewMain, navController);
 
-        //Set the add device button
-        Button buttonAddDevice = findViewById(R.id.button_add_devices);
-        buttonAddDevice.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, DeviceAddActivity.class);
-                startActivity(intent);
-            }
-        });
+
 
         //Set GridView
-        setGridView();
+        //setGridView();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         //Refresh GridView data
-        setGridView();
+        //setGridView();
 
     }
 

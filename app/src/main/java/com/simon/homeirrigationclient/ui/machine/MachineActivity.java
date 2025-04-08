@@ -72,61 +72,6 @@ public class MachineActivity extends AppCompatActivity {
         //Show the device information on the page
 
 
-
-        //Log.d("Mode number:", String.valueOf(currentDeviceInfo.mode));
-        /*
-        if(currentDeviceInfo.mode == 1) {   //Scheduled
-            textViewMode.setText("Scheduled");
-            //Load the scheduled frequency and time
-            //ViewStub viewStub = findViewById(R.id.viewStub_scheduled_time);
-            //View viewStubView = viewStub.inflate();
-            TextView textViewScheduledFreq = findViewById(R.id.textView_dashboard_scheduled_freq);
-            //if(currentDeviceInfo.scheduledFreq == )
-            //textViewScheduledFreq.setText("Scheduled Frequency: " + );
-            switch (currentDeviceInfo.scheduledFreq) {
-                case 1: //Every day
-                    textViewScheduledFreq.setText("Scheduled Frequency: Every day");
-                    break;
-                case 2: //Every 2 days
-                    textViewScheduledFreq.setText("Scheduled Frequency: Every 2 days");
-                    break;
-                case 3: //Every three days
-                    textViewScheduledFreq.setText("Scheduled Frequency: Every 3 days");
-                    break;
-                case 4: //Every week
-                    textViewScheduledFreq.setText("Scheduled Frequency: Every week");
-                    break;
-            }
-            TextView textViewScheduledTime = findViewById(R.id.textView_dashboard_scheduled_time);
-            textViewScheduledTime.setText("Scheduled time: " + currentDeviceInfo.scheduledTime);
-
-        } else if(currentDeviceInfo.mode == 2){ //Manual
-            textViewMode.setText("Manual");
-        }
-        //textViewMode.setText("Test");
-        */
-
-        //Set the edit (basic info) button to show the edit basic info dialog
-        Button editBasicInfoButton = findViewById(R.id.button_dashboard_basic_info_edit);
-        editBasicInfoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Dialog editBasicInfoDialog = new Dialog(MachineActivity.this);
-                editBasicInfoDialog.setContentView(R.layout.dialog_edit_basic_info);
-                editBasicInfoDialog.show();
-            }
-        });
-
-        //Set the edit mode button
-        Button editModeButton = findViewById(R.id.button_dashboard_mode_edit);
-        editModeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Dialog editModeDialog = new Dialog(MachineActivity.this);
-                editModeDialog.setContentView(R.layout.dialog_edit_mode);
-                editModeDialog.show();
-            }
-        });
     }
 
 }

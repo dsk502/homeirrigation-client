@@ -1,9 +1,11 @@
 package com.simon.homeirrigationclient.ui.machine.dashboard;
 
+import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -13,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.simon.homeirrigationclient.R;
 import com.simon.homeirrigationclient.databinding.FragmentDashboardBinding;
 import com.simon.homeirrigationclient.model.DeviceInfo;
+import com.simon.homeirrigationclient.ui.machine.MachineActivity;
 
 public class DashboardFragment extends Fragment {
 
@@ -55,6 +58,28 @@ public class DashboardFragment extends Fragment {
 
         //Load the data into the viewmodel
         dashboardViewModel.loadData();
+
+        //Set the edit (basic info) button to show the edit basic info dialog
+        Button editBasicInfoButton = root.findViewById(R.id.button_dashboard_basic_info_edit);
+        editBasicInfoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Dialog editBasicInfoDialog = new Dialog(requireContext());
+                editBasicInfoDialog.setContentView(R.layout.dialog_edit_basic_info);
+                editBasicInfoDialog.show();
+            }
+        });
+
+        //Set the edit mode button
+        Button editModeButton = root.findViewById(R.id.button_dashboard_mode_edit);
+        editModeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Dialog editModeDialog = new Dialog(requireContext());
+                editModeDialog.setContentView(R.layout.dialog_edit_mode);
+                editModeDialog.show();
+            }
+        });
 
         return root;
     }
