@@ -25,12 +25,12 @@ public class HICApplication extends Application {
         super.onCreate();
         instance = this;
 
+        //Init is in this method
         //1. Init the common database helper (device database helper)
         deviceDatabaseHelper = new DeviceDatabaseHelper(this);
 
-        //2. Init the rsaUtils object
+        //2. Init the rsaUtils object and generate the rsa keys
         rsaUtils = new RSAUtils(this);
-
         if(!rsaUtils.isKeypairFileExist()) {
             try {
                 Log.println(Log.ERROR, "Is keypair exist:", "False");

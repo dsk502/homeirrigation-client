@@ -42,7 +42,7 @@ public class DeviceInfo {
     //Default: 1
     public int scheduledFreq;
 
-    public String scheduledTime;
+    public String scheduledTime = "1200";
 
     //TCP Client customized for the device
     public TCPClient tcpClient;

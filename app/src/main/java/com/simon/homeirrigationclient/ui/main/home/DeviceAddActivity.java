@@ -65,15 +65,20 @@ public class DeviceAddActivity extends AppCompatActivity {
                 long timestamp = DeviceDatabaseHelper.getAddTime();
 
                 //Create the DeviceInfo object and its TCP client
-                DeviceInfo newDeviceInfo = new DeviceInfo("0", newName, clientPubkey, timestamp, newAddress, newPort, 0);
+                DeviceInfo newDeviceInfo = new DeviceInfo("0", newName, clientPubkey, timestamp, newAddress, newPort, 1);
                 newDeviceInfo.tcpClient = new TCPClient(getApplicationContext(), newAddress, newPort);
+
+                //Add the device
                 int addDeviceResult = newDeviceInfo.tcpClient.addDeviceRequest(clientPubkey, newDeviceInfo);
                 if(addDeviceResult == 0) {
                     HICApplication.getInstance().servers.add(newDeviceInfo);
+                    Toast.makeText(DeviceAddActivity.this, "Device added", Toast.LENGTH_SHORT).show();
                 } else if(addDeviceResult == 1){
                     Toast.makeText(DeviceAddActivity.this, "Message format Error", Toast.LENGTH_SHORT).show();
                 }
 
+                //Back to the main activity
+                finish();
             }
         });
     }

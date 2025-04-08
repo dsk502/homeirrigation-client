@@ -15,9 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HomeIrrigationClient"
         tools:targetApi="31">
-        <activity
-            android:name=".ui.machine.dashboard.EditDeviceSettingsActivity"
-            android:exported="false" />
+
         <activity
             android:name=".ui.main.home.DeviceAddActivity"
             android:exported="false"

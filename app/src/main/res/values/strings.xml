@@ -17,6 +17,8 @@
     <string name="text_device_add">Add a new device</string>
     <string name="text_address">Address:</string>
     <string name="text_basic_info">Basic Information</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
     <!-- Strings used for fragments for navigation -->
 
     <!-- TODO: Remove or change this placeholder text -->
