@@ -61,16 +61,6 @@ public class MachineActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navViewMachine, navController);
 
-        //Create the bundle and parse the index by navigating to dash
-        //Bundle indexBundle = new Bundle();
-        //indexBundle.putInt("indexOfDeviceInfo", indexOfDeviceInfo);
-        //navController.navigate(R.id.navigation_dashboard, indexBundle);
-
-        //Get the DeviceInfo object from the application ArrayList
-        //currentDeviceInfo = HICApplication.getInstance().servers.get(indexOfDeviceInfo);
-
-        //Show the device information on the page
-
 
     }
 

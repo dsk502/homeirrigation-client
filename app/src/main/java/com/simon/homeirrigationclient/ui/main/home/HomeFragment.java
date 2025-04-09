@@ -2,6 +2,7 @@ package com.simon.homeirrigationclient.ui.main.home;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 
 public class HomeFragment extends Fragment {
 
+    private DeviceCardGridViewAdapter gridViewAdapter;
     private FragmentHomeBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -36,7 +38,7 @@ public class HomeFragment extends Fragment {
 
         GridView gridView = root.findViewById(R.id.gridView_device_card);
         ArrayList<DeviceInfo> deviceInfoList = HICApplication.getInstance().servers;
-        DeviceCardGridViewAdapter gridViewAdapter = new DeviceCardGridViewAdapter(requireContext(), deviceInfoList);
+        gridViewAdapter = new DeviceCardGridViewAdapter(requireContext(), deviceInfoList);
         gridView.setAdapter(gridViewAdapter);
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -49,6 +51,21 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        // 设置长按事件监听器
+        /*
+        gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                // 显示删除按钮
+                gridViewAdapter.selectedPosition = position;
+                Log.d("Long click index:", String.valueOf(position));
+                gridViewAdapter.notifyDataSetChanged();
+                return true;
+            }
+        });
+        
+         */
+
         //Set the add device button
         Button buttonAddDevice = root.findViewById(R.id.button_add_devices);
         buttonAddDevice.setOnClickListener(new View.OnClickListener() {
@@ -59,7 +76,38 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        //Set the edit device or done button
+        //Default: Edit
+        Button buttonEditDone = root.findViewById(R.id.button_edit_done);
+        buttonEditDone.setTag("Edit");
+        buttonEditDone.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String buttonTag = (String)buttonEditDone.getTag();
+                if(buttonTag.equals("Edit")) {
+                    //If button is edit
+                    gridViewAdapter.showDeleteButton = true;
+                    gridViewAdapter.notifyDataSetChanged();
+                    buttonEditDone.setText("Done");
+                    buttonEditDone.setTag("Done");
+                } else {    //If button is done
+                    gridViewAdapter.showDeleteButton = false;
+                    gridViewAdapter.notifyDataSetChanged();
+                    buttonEditDone.setText("Edit");
+                    buttonEditDone.setTag("Edit");
+                }
+
+            }
+        });
+
         return root;
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        gridViewAdapter.notifyDataSetChanged();
     }
 
     @Override

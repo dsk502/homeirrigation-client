@@ -23,12 +23,12 @@ import javax.crypto.spec.IvParameterSpec;
 public class TCPClient {
 
     public Context context;
-    public String serverHost = "172.20.10.6";
-    public int serverPort = 7400;
+    public String serverHost;
+    public int serverPort;
     //use \n to end the data
     //Ask the server (Raspberry Pi) to generate server id
 
-    public String serverPubKey;
+    //public String serverPubKey;
 
     //public RSAUtils rsaUtils;
     public TCPClient(Context context, String serverHost, int serverPort) {
@@ -48,6 +48,7 @@ public class TCPClient {
 
             public int networkOperation() {
                 try (Socket socket = new Socket(serverHost, serverPort)) {
+                    String serverPubKey = "";
                     //InputStream is used for reading messages coming from server
                     InputStream in = socket.getInputStream();
 
@@ -114,7 +115,7 @@ public class TCPClient {
                     sendingMessage = "reply_add_param(" + deviceInfo.mode + "," + deviceInfo.waterAmount + "," + deviceInfo.scheduledFreq + "," + deviceInfo.scheduledTime + ")";
                     Log.println(Log.ERROR, "Server public key:", serverPubKey);
 
-                    sendingBytes = packMessageEncrypt(sendingMessage);
+                    sendingBytes = packMessageEncrypt(sendingMessage, serverPubKey);
                     Log.println(Log.ERROR,"First encrypted message:", new String(sendingBytes));
                     out.write(sendingBytes);
                     out.flush();
@@ -139,7 +140,7 @@ public class TCPClient {
 
                     //Reply finish_add_client()
                     sendingMessage = "finish_add_client()";
-                    sendingBytes = packMessageEncrypt(sendingMessage);
+                    sendingBytes = packMessageEncrypt(sendingMessage, serverPubKey);
                     Log.println(Log.ERROR, "Finish add client: ", new String(sendingBytes));
                     out.write(sendingBytes);
                     out.flush();
@@ -170,7 +171,7 @@ public class TCPClient {
 
     }
 
-    public void downloadStatRequest(String serverId) {
+    public void downloadStatRequest(String serverId, String serverPubKey) {
 
         String receiveFilePath = "temp/watering_record_" + serverId + "_encrypted.db";
 
@@ -192,7 +193,7 @@ public class TCPClient {
 
             //Sending download_stat()
             sendingMessage = "download_stat()";
-            sendingBytes = packMessageEncrypt(sendingMessage);
+            sendingBytes = packMessageEncrypt(sendingMessage, serverPubKey);
             outputStream.write(sendingBytes);
             outputStream.flush();
 
@@ -211,7 +212,7 @@ public class TCPClient {
 
             //Reply stat_key_ok
             sendingMessage = "stat_key_ok()";
-            sendingBytes = packMessageEncrypt(sendingMessage);
+            sendingBytes = packMessageEncrypt(sendingMessage, serverPubKey);
             outputStream.write(sendingBytes);
             outputStream.flush();
 
@@ -246,9 +247,76 @@ public class TCPClient {
         }
     }
 
-    public int deleteDeviceRequest() {
+    public int deleteDeviceRequest(String serverPubkey) {
+        final int[] result = new int[1];
+        Thread delDeviceThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                result[0] = networkOperation();
+            }
 
-        return 0;
+            public int networkOperation() {
+                try (Socket socket = new Socket(serverHost, serverPort)) {
+                    //InputStream is used for reading messages coming from server
+                    InputStream in = socket.getInputStream();
+
+                    //OutputStream is used for sending messages to the server
+                    OutputStream out = socket.getOutputStream();
+
+                    //Variables for sending and receiving
+                    byte[] sendingBytes;
+                    String sendingMessage;
+
+                    byte[] receiveBuffer = new byte[1024];
+                    int receiveLen;
+                    String receivedMessage;
+                    String recvCommand;
+                    String[] recvParams;
+
+                    //Send del_device()
+                    sendingMessage = "del_device()";
+                    sendingBytes = packMessageEncrypt(sendingMessage, serverPubkey);
+                    Log.d("Server pub key:", serverPubkey);
+                    out.write(sendingBytes);
+                    out.flush();
+
+                    //Receive finish_del_device_server()
+                    receiveLen = in.read(receiveBuffer);
+                    receivedMessage = unpackEncryptedMessage(receiveBuffer);
+                    if(receivedMessage == null) {   //If encrypted or no end tag -> error
+                        //Toast.makeText(context, "Message format error", Toast.LENGTH_SHORT).show();
+                        return 1;
+                    }
+                    //Retrieve command and arguments
+                    recvCommand = extractCommand(receivedMessage);
+                    //recvParams = extractParams(receivedMessage);
+                    if(!recvCommand.equals("finish_del_device_server")) {
+                        return -1;
+                    }
+
+                    //Close the input and output stream
+                    in.close();
+                    out.close();
+                    return 0;
+
+                } catch (IOException e) {
+                    Log.println(Log.ERROR, "Error", "Network Error!");
+                    e.printStackTrace();
+                    return -1;
+                } catch (IndexOutOfBoundsException e) {
+                    Log.println(Log.ERROR,"Error", "Message Error!");
+                    return -1;
+                }
+            }
+        });
+
+        delDeviceThread.start();
+        try {
+            delDeviceThread.join();
+        } catch (InterruptedException e) {
+            return -1;
+        }
+        return result[0];
     }
 
     private byte[] packMessageNoEncrypt(String message) {
@@ -273,41 +341,18 @@ public class TCPClient {
 
     }
 
-    private byte[] packMessageEncrypt(String message) {
+    private byte[] packMessageEncrypt(String message, String serverPubKey) {
         //Encrypt the message
         try {
             RSAUtils rsaUtils = RSAUtils.getInstance();
             String encryptedMessage = rsaUtils.rsaEncrypt(message, rsaUtils.loadPublicKey(serverPubKey));
-            return packMessageNoEncrypt(encryptedMessage);
+            byte[] encryptedMessageBytes = packMessageNoEncrypt(encryptedMessage);
+            encryptedMessageBytes[0] = 0x02;    //Change the tag
+            return encryptedMessageBytes;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-
-    //Pack (and encrypt) the sending message
-    /*
-    private byte[] packMessage(String message, boolean isEncrypted) {
-        byte[] messageBytes;
-        byte[] packedMessage = new byte[message.length() + 2];
-        if(isEncrypted) {
-            String encryptedMessage;    //Encrypt the message
-            try {
-                encryptedMessage = rsaUtils.rsaEncrypt(message, rsaUtils.loadPublicKey(serverPubKey));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            messageBytes = encryptedMessage.getBytes();   //Convert the encrypted message to byte array
-            packedMessage[0] = 0x02;    //Set the first byte of the packed byte array
-        } else {
-            messageBytes = message.getBytes(StandardCharsets.US_ASCII);
-            packedMessage[0] = 0x01;
-        }
-        System.arraycopy(messageBytes, 0, packedMessage, 1, messageBytes.length);   //Copy the message block to the packed array
-        packedMessage[packedMessage.length - 1] = (byte)10;   //10 = '\n', set the last byte of the packed array
-        return packedMessage;
-    }
-
-     */
 
     //Unpack the received message from the receive buffer
     private String unpackUnencryptedMessage(byte[] receiveBuffer) {
