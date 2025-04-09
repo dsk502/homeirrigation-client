@@ -6,10 +6,107 @@
     android:layout_height="match_parent"
     >
 
-    <!-- TODO: Update blank fragment layout -->
+    <!-- 标题 -->
     <TextView
+        android:id="@+id/dialog_edit_basic_info_title"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="自定义对话框"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="8dp" />
+
+    <!-- 内容 -->
+    <TextView
+        android:id="@+id/dialog_edit_basic_info_name_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_edit_basic_info_title"
+        android:paddingHorizontal="8dp"
+        android:text="@string/text_name"
+        android:textSize="18sp">
+
+    </TextView>
+
+    <EditText
+        android:id="@+id/editText_dialog_edit_basic_info_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@+id/dialog_edit_basic_info_name_tag"
+        app:layout_constraintBottom_toBottomOf="@+id/dialog_edit_basic_info_name_tag"
+        app:layout_constraintStart_toEndOf="@+id/dialog_edit_basic_info_name_tag"
+        android:layout_marginStart="5dp"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/dialog_edit_basic_info_address_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_edit_basic_info_name_tag"
+        android:layout_marginTop="10dp"
+
+        android:paddingHorizontal="8dp"
+        android:text="@string/text_address"
+        android:textSize="18sp"/>
+
+    <EditText
+        android:id="@+id/editText_dialog_edit_basic_info_address"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@+id/dialog_edit_basic_info_address_tag"
+        app:layout_constraintBottom_toBottomOf="@+id/dialog_edit_basic_info_address_tag"
+        app:layout_constraintStart_toEndOf="@+id/dialog_edit_basic_info_address_tag"
+        android:layout_marginStart="5dp"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/dialog_edit_basic_info_port_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_edit_basic_info_address_tag"
+        android:layout_marginTop="10dp"
+
+        android:paddingHorizontal="8dp"
+        android:text="@string/text_port"
+        android:textSize="18sp"/>
+
+    <EditText
+        android:id="@+id/editText_dialog_edit_basic_info_port"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@+id/dialog_edit_basic_info_port_tag"
+        app:layout_constraintBottom_toBottomOf="@+id/dialog_edit_basic_info_port_tag"
+        app:layout_constraintStart_toEndOf="@+id/dialog_edit_basic_info_port_tag"
+        android:layout_marginStart="5dp"
+        android:textSize="18sp"/>
+
+    <!-- 按钮 -->
+    <LinearLayout
+        style="?android:attr/buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_edit_basic_info_port_tag"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingTop="16dp">
+
+        <Button
+            android:id="@+id/button_dialog_edit_basic_info_cancel"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/button_dialog_edit_basic_info_ok"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/text_ok"
+            android:layout_weight="1" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

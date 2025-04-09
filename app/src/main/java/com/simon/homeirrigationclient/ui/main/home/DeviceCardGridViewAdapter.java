@@ -74,6 +74,8 @@ public class DeviceCardGridViewAdapter extends BaseAdapter {
             deleteButton.setVisibility(View.VISIBLE);
             //Log.d("Set delete avail: ", String.valueOf(position));
 
+        } else {
+            deleteButton.setVisibility(View.GONE);
         }
 
         //Set delete button event
@@ -82,8 +84,8 @@ public class DeviceCardGridViewAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
                 //Clear the settings on server and delete the device in the client database
-                deviceInfo.tcpClient.deleteDeviceRequest(deviceInfo.serverPubkey);
-                HICApplication.getInstance().deviceDatabaseHelper.deleteDevice(deviceInfo.serverId);
+                deviceInfo.tcpClient.deleteDeviceRequest(deviceInfo.serverId, deviceInfo.serverPubkey);
+
                 //Delete device in the ArrayList
                 deviceInfos.remove(deviceInfo);
                 //Notify data change, to refresh the gridview

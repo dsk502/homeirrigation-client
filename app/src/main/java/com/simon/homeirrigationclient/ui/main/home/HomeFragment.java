@@ -51,21 +51,6 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // 设置长按事件监听器
-        /*
-        gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                // 显示删除按钮
-                gridViewAdapter.selectedPosition = position;
-                Log.d("Long click index:", String.valueOf(position));
-                gridViewAdapter.notifyDataSetChanged();
-                return true;
-            }
-        });
-        
-         */
-
         //Set the add device button
         Button buttonAddDevice = root.findViewById(R.id.button_add_devices);
         buttonAddDevice.setOnClickListener(new View.OnClickListener() {

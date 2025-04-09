@@ -247,7 +247,58 @@ public class TCPClient {
         }
     }
 
-    public int deleteDeviceRequest(String serverPubkey) {
+    public int editModeRequest(String newMode, String newWaterAmount, String newScheduledFreq, String newScheduledTime, String serverPubkey) {
+        final int[] result = new int[1];
+        Thread editModeThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                result[0] = networkOperation();
+            }
+
+            public int networkOperation() {
+                try (Socket socket = new Socket(serverHost, serverPort)) {
+                    //InputStream is used for reading messages coming from server
+                    InputStream in = socket.getInputStream();
+
+                    //OutputStream is used for sending messages to the server
+                    OutputStream out = socket.getOutputStream();
+
+                    //Variables for sending and receiving
+                    byte[] sendingBytes;
+                    String sendingMessage;
+
+                    byte[] receiveBuffer = new byte[1024];
+                    int receiveLen;
+                    String receivedMessage;
+                    String recvCommand;
+                    String[] recvParams;
+
+                    //Send edit_mode(mode, water_amount, scheduled_freq, scheduled_time)
+                    sendingMessage = "edit_mode(" + newMode + "," + newWaterAmount + "," + newScheduledFreq + ","+ newScheduledTime + ");";
+                    sendingBytes = packMessageEncrypt(sendingMessage, serverPubkey);
+                    out.write(sendingBytes);
+                    out.flush();
+
+                    //Receive finish_edit_server()
+                    receiveLen = in.read(receiveBuffer);
+                    receivedMessage = unpackEncryptedMessage(receiveBuffer);
+                    if(!receivedMessage.equals("finish_edit_server()")) {
+                        return -1;
+                    }
+
+                    in.close();
+                    out.close();
+
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+                return 0;
+            }
+        });
+
+        return result[0];
+    }
+    public int deleteDeviceRequest(String serverId, String serverPubkey) {
         final int[] result = new int[1];
         Thread delDeviceThread = new Thread(new Runnable() {
             @Override
@@ -294,6 +345,8 @@ public class TCPClient {
                         return -1;
                     }
 
+                    //Delete the device from client database
+                    HICApplication.getInstance().deviceDatabaseHelper.deleteDevice(serverId);
                     //Close the input and output stream
                     in.close();
                     out.close();
