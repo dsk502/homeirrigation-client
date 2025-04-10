@@ -56,7 +56,7 @@
             />
 
         <TextView
-            android:id="@+id/dashboard_address_tag"
+            android:id="@+id/dashboard_host_tag"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@id/dashboard_name_tag"
@@ -65,11 +65,27 @@
             android:text="@string/text_address"/>
 
         <TextView
-            android:id="@+id/textView_dashboard_address_detail"
+            android:id="@+id/textView_dashboard_host_detail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toEndOf="@id/dashboard_address_tag"
-            app:layout_constraintBottom_toBottomOf="@id/dashboard_address_tag"/>
+            app:layout_constraintStart_toEndOf="@id/dashboard_host_tag"
+            app:layout_constraintBottom_toBottomOf="@id/dashboard_host_tag"/>
+
+        <TextView
+            android:id="@+id/dashboard_port_tag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/dashboard_host_tag"
+            app:layout_constraintStart_toStartOf="@+id/dashboard_host_tag"
+            android:layout_marginTop="20dp"
+            android:text="@string/text_port"/>
+
+        <TextView
+            android:id="@+id/textView_dashboard_port_detail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@id/dashboard_port_tag"
+            app:layout_constraintBottom_toBottomOf="@id/dashboard_port_tag"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout

@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     >
 
-    <!-- 标题 -->
+    <!-- Title -->
     <TextView
         android:id="@+id/dialog_edit_basic_info_title"
         android:layout_width="match_parent"

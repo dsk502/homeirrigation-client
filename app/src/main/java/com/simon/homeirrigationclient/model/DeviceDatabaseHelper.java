@@ -1,6 +1,7 @@
 package com.simon.homeirrigationclient.model;
 
 import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothClass;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -128,5 +129,18 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
         return System.currentTimeMillis();
     }
 
+    public void updateBasicInfo(DeviceInfo deviceInfo, String newName, String newHost, String newPort) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String serverId = deviceInfo.serverId;
+        ContentValues values = new ContentValues();
+        values.put("name", newName);
+        values.put("host", newHost);
+        values.put("port", newPort);
+        db.update("servers", values, "server_id = ?", new String[]{serverId});
+        db.close();
 
+    }
+    public void updateMode() {
+
+    }
 }

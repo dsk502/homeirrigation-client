@@ -11,10 +11,12 @@ public class DashboardViewModel extends ViewModel {
 
     public int indexOfDeviceInfo;
     private MutableLiveData<String> mDeviceName;
-    private MutableLiveData<String> mAddressPort;
-    private MutableLiveData<String> mMode;
-    private MutableLiveData<String> mScheduledFreqHint;
-    private MutableLiveData<String> mScheduledTimeHint;
+    private MutableLiveData<String> mHost;
+
+    private MutableLiveData<String> mPort;
+    private MutableLiveData<Integer> mMode;
+    private MutableLiveData<Integer> mScheduledFreq;
+    private MutableLiveData<String> mScheduledTime;
 
     /*
     public DashboardViewModel(String deviceName, String addressPort) {
@@ -27,36 +29,45 @@ public class DashboardViewModel extends ViewModel {
 
     public DashboardViewModel() {
         mDeviceName = new MutableLiveData<>();
-        mAddressPort = new MutableLiveData<>();
+        mHost = new MutableLiveData<>();
+        mPort = new MutableLiveData<>();
         mMode = new MutableLiveData<>();
-        mScheduledFreqHint = new MutableLiveData<>();
-        mScheduledTimeHint = new MutableLiveData<>();
+        mScheduledFreq = new MutableLiveData<>();
+        mScheduledTime = new MutableLiveData<>();
     }
 
     public LiveData<String> getDeviceName() {
         return mDeviceName;
     }
 
-    public LiveData<String> getAddressPort() {
-        return mAddressPort;
+    public LiveData<String> getHost() {
+        return mHost;
+    }
+    public LiveData<String> getPort() {
+        return mPort;
     }
 
-    public LiveData<String> getMode() {
+    public LiveData<Integer> getMode() {
         return mMode;
     }
 
-    public LiveData<String> getScheduledFreqHint() {
-        return mScheduledFreqHint;
+    public LiveData<Integer> getScheduledFreq() {
+        return mScheduledFreq;
     }
 
-    public LiveData<String> getScheduledTimeHint() {
-        return mScheduledTimeHint;
+    public LiveData<String> getScheduledTime() {
+        return mScheduledTime;
     }
 
     public void loadData() {
         DeviceInfo currentDeviceInfo = HICApplication.getInstance().servers.get(indexOfDeviceInfo);
         mDeviceName.setValue(currentDeviceInfo.name);
-        mAddressPort.setValue(currentDeviceInfo.host + ": " + currentDeviceInfo.port);
+        mHost.setValue(currentDeviceInfo.host);
+        mPort.setValue(String.valueOf(currentDeviceInfo.port));
+        mMode.setValue(currentDeviceInfo.mode);
+        mScheduledFreq.setValue(currentDeviceInfo.scheduledFreq);
+        mScheduledTime.setValue(currentDeviceInfo.scheduledTime);
+        /*
         if(currentDeviceInfo.mode == 1) {   //Scheduled
             mMode.setValue("Scheduled");
             switch(currentDeviceInfo.scheduledFreq) {
@@ -83,6 +94,8 @@ public class DashboardViewModel extends ViewModel {
             mScheduledFreqHint.setValue("");
             mScheduledTimeHint.setValue("");
         }
+
+         */
 
     }
 
