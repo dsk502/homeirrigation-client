@@ -22,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/dialog_edit_mode_title"
-
+        app:layout_constraintStart_toStartOf="parent"
         android:paddingHorizontal="8dp"
         android:text="@string/text_mode"
         android:textSize="18sp"/>
@@ -42,6 +42,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/dialog_edit_mode_mode_tag"
+        app:layout_constraintStart_toStartOf="parent"
         android:paddingHorizontal="8dp"
         android:text="Frequency"
         android:textSize="18sp"/>
@@ -57,10 +58,30 @@
         android:textSize="18sp"/>
 
     <TextView
-        android:id="@+id/dialog_edit_mode_time_tag"
+        android:id="@+id/dialog_edit_mode_water_amount_tag"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/dialog_edit_mode_freq_tag"
+        app:layout_constraintStart_toStartOf="parent"
+        android:paddingHorizontal="8dp"
+        android:text="Water amount for 1 irrigation"
+        android:textSize="18sp"/>
+
+    <EditText
+        android:id="@+id/editText_dialog_edit_mode_water_amount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBaseline_toBaselineOf="@+id/dialog_edit_mode_water_amount_tag"
+        app:layout_constraintStart_toEndOf="@+id/dialog_edit_mode_water_amount_tag"
+        android:paddingHorizontal="8dp"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/dialog_edit_mode_time_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_edit_mode_water_amount_tag"
+        app:layout_constraintStart_toStartOf="parent"
         android:paddingHorizontal="8dp"
         android:text="Time"
         android:textSize="18sp"/>

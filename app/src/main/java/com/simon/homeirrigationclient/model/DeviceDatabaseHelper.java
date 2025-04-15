@@ -140,7 +140,15 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
         db.close();
 
     }
-    public void updateMode() {
-
+    public void updateMode(DeviceInfo deviceInfo, int newMode, double newWaterAmount, int newScheduledFreq, String newScheduledTime) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String serverId = deviceInfo.serverId;
+        ContentValues values = new ContentValues();
+        values.put("mode", newMode);
+        values.put("water_amount", newWaterAmount);
+        values.put("scheduled_freq", newScheduledFreq);
+        values.put("scheduled_time", newScheduledTime);
+        db.update("servers", values, "server_id = ?", new String[]{serverId});
+        db.close();
     }
 }

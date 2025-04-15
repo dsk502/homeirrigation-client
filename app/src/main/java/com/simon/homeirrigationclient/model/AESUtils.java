@@ -29,12 +29,12 @@ public class AESUtils {
 
 
     // 解密文件
-    public static void decryptFile(String inputFilePath, String outputFilePath, SecretKey key, IvParameterSpec iv) throws Exception {
+    public static void decryptFile(File inputFile, File outputFile, SecretKey key, IvParameterSpec iv) throws Exception {
         Cipher cipher = Cipher.getInstance(TRANSFORMATION);
         cipher.init(Cipher.DECRYPT_MODE, key, iv);
 
-        try (FileInputStream fis = new FileInputStream(inputFilePath);
-             FileOutputStream fos = new FileOutputStream(outputFilePath)) {
+        try (FileInputStream fis = new FileInputStream(inputFile);
+             FileOutputStream fos = new FileOutputStream(outputFile)) {
             byte[] buffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = fis.read(buffer)) != -1) {
@@ -49,7 +49,7 @@ public class AESUtils {
             }
         }
 
-        System.out.println("文件解密成功: " + outputFilePath);
+        System.out.println("文件解密成功: " + outputFile);
     }
 
     /*

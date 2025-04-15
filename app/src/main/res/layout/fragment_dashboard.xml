@@ -127,11 +127,19 @@
             android:text="@string/text_edit"/>
 
         <TextView
-            android:id="@+id/textView_dashboard_scheduled_freq"
+            android:id="@+id/textView_dashboard_water_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="@+id/dashboard_mode_tag"
             app:layout_constraintTop_toBottomOf="@id/dashboard_mode_tag"
+            android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:id="@+id/textView_dashboard_scheduled_freq"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@+id/dashboard_mode_tag"
+            app:layout_constraintTop_toBottomOf="@id/textView_dashboard_water_amount"
             android:layout_marginTop="20dp"/>
 
         <TextView
@@ -142,6 +150,17 @@
             app:layout_constraintTop_toBottomOf="@+id/textView_dashboard_scheduled_freq"
             android:layout_marginTop="20dp"
             android:text=""/>
+
+        <Button
+            android:id="@+id/button_dashboard_watering_now"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@+id/dashboard_mode_tag"
+            app:layout_constraintTop_toBottomOf="@+id/textView_dashboard_scheduled_time"
+            android:layout_marginTop="20dp"
+            android:text="Watering now"/>
+
+
 
 
 

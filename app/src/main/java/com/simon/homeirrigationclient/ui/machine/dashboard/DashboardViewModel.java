@@ -15,23 +15,17 @@ public class DashboardViewModel extends ViewModel {
 
     private MutableLiveData<String> mPort;
     private MutableLiveData<Integer> mMode;
+
+    private MutableLiveData<Double> mWaterAmount;
     private MutableLiveData<Integer> mScheduledFreq;
     private MutableLiveData<String> mScheduledTime;
-
-    /*
-    public DashboardViewModel(String deviceName, String addressPort) {
-        mDeviceName = new MutableLiveData<>();
-        //mText = new MutableLiveData<>();
-        //mText.setValue("This is home fragment");
-        mDeviceName.setValue(deviceName);
-    }
-    */
 
     public DashboardViewModel() {
         mDeviceName = new MutableLiveData<>();
         mHost = new MutableLiveData<>();
         mPort = new MutableLiveData<>();
         mMode = new MutableLiveData<>();
+        mWaterAmount = new MutableLiveData<>();
         mScheduledFreq = new MutableLiveData<>();
         mScheduledTime = new MutableLiveData<>();
     }
@@ -51,6 +45,9 @@ public class DashboardViewModel extends ViewModel {
         return mMode;
     }
 
+    public LiveData<Double> getWaterAmount() {
+        return mWaterAmount;
+    }
     public LiveData<Integer> getScheduledFreq() {
         return mScheduledFreq;
     }
@@ -65,6 +62,7 @@ public class DashboardViewModel extends ViewModel {
         mHost.setValue(currentDeviceInfo.host);
         mPort.setValue(String.valueOf(currentDeviceInfo.port));
         mMode.setValue(currentDeviceInfo.mode);
+        mWaterAmount.setValue(currentDeviceInfo.waterAmount);
         mScheduledFreq.setValue(currentDeviceInfo.scheduledFreq);
         mScheduledTime.setValue(currentDeviceInfo.scheduledTime);
         /*
