@@ -3,20 +3,17 @@ package com.simon.homeirrigationclient.model;
 
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.simon.homeirrigationclient.HICApplication;
-import com.simon.homeirrigationclient.ui.main.home.DeviceAddActivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
-import java.util.Arrays;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -26,12 +23,18 @@ public class TCPClient {
     public Context context;
     public String serverHost;
     public int serverPort;
-    //use \n to end the data
-    //Ask the server (Raspberry Pi) to generate server id
 
-    //public String serverPubKey;
+    private final int SOCKET_TIMEOUT = 5000;    //The timeout is 5000ms
 
-    //public RSAUtils rsaUtils;
+    //Define error return values
+    public final int ERR_NETWORK_TIMEOUT = 1;
+    public final int ERR_MESSAGE_FORMAT = 2;   //If the head (is encrypted) or tail (\n) tag of the message is unexpected value, return this number
+    public final int ERR_MESSAGE_CONTENT = 3;  //If the content of the message (command or parameters) is unexpected value, return this number
+    public final int ERR_INTERRUPTED = 4;
+    public final int ERR_OTHERS = 5;
+
+
+
     public TCPClient(Context context, String serverHost, int serverPort) {
         this.context = context;
         this.serverHost = serverHost;
@@ -44,11 +47,14 @@ public class TCPClient {
         Thread addDeviceThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                result[0] = networkOperation();
+                result[0] = addDeviceNetOperations();
             }
 
-            public int networkOperation() {
+            public int addDeviceNetOperations() {
                 try (Socket socket = new Socket(serverHost, serverPort)) {
+                    //Set the socket timeout
+                    socket.setSoTimeout(SOCKET_TIMEOUT);
+
                     String serverPubKey = "";
                     //InputStream is used for reading messages coming from server
                     InputStream in = socket.getInputStream();
@@ -76,19 +82,18 @@ public class TCPClient {
                     receiveLen = in.read(receiveBuffer);
                     receivedMessage = unpackUnencryptedMessage(receiveBuffer);
                     if(receivedMessage == null) {   //If encrypted or no end tag -> error
-                        //Toast.makeText(context, "Message format error", Toast.LENGTH_SHORT).show();
-                        return 1;
+                        return ERR_MESSAGE_FORMAT;
                     }
 
                     //Retrieve command and arguments
                     recvCommand = extractCommand(receivedMessage);
                     recvParams = extractParams(receivedMessage);
                     if(!(recvCommand.equals("key_exchange_server") && recvParams.length == 1)) {
-                        return -1;
+                        return ERR_MESSAGE_CONTENT;
                     }
                     //Store the server_pubkey
                     serverPubKey = new String(recvParams[0]);
-                    Log.println(Log.ERROR, "Server public key:", serverPubKey);
+                    //Log.println(Log.ERROR, "Server public key:", serverPubKey);
 
 
                     //Reply key_exchange_client(client_pubkey)
@@ -101,23 +106,20 @@ public class TCPClient {
                     receiveLen = in.read(receiveBuffer);
                     receivedMessage = unpackEncryptedMessage(receiveBuffer);
                     Log.println(Log.ERROR, "Received Message:", receivedMessage);
-                    if(receivedMessage == null) {
-                        return -1;
-                    }
                     recvCommand = extractCommand(receivedMessage);
                     recvParams = extractParams(receivedMessage);
                     if(!(recvCommand.equals("request_add_param") && recvParams.length == 1)) {
-                        return -1;
+                        return ERR_MESSAGE_CONTENT;
                     }
                     String serverId = new String(recvParams[0]);
-                    Log.println(Log.ERROR, "Received", "Received request_add_param");
+                    //Log.println(Log.ERROR, "Received", "Received request_add_param");
 
                     //Reply reply_add_param(mode,water_amount,scheduled_freq,scheduled_time) -- encrypted
                     sendingMessage = "reply_add_param(" + deviceInfo.mode + "," + deviceInfo.waterAmount + "," + deviceInfo.scheduledFreq + "," + deviceInfo.scheduledTime + ")";
-                    Log.println(Log.ERROR, "Server public key:", serverPubKey);
+                    //Log.println(Log.ERROR, "Server public key:", serverPubKey);
 
                     sendingBytes = packMessageEncrypt(sendingMessage, serverPubKey);
-                    Log.println(Log.ERROR,"First encrypted message:", new String(sendingBytes));
+                    //Log.println(Log.ERROR,"First encrypted message:", new String(sendingBytes));
                     out.write(sendingBytes);
                     out.flush();
 
@@ -126,11 +128,10 @@ public class TCPClient {
                     receivedMessage = unpackEncryptedMessage(receiveBuffer);
                     Log.println(Log.ERROR, "Finish add server: ", receivedMessage);
                     recvCommand = extractCommand(receivedMessage);
-                    //recvParams = extractParams(receivedMessage);
                     if(!recvCommand.equals("finish_add_server")) {
-                        return -1;
+                        return ERR_MESSAGE_CONTENT;
                     }
-                    Log.println(Log.ERROR, "After finish add server", "Yes");
+                    //Log.println(Log.ERROR, "After finish add server", "Yes");
 
                     //Update the server id and server public key in deviceInfo object
                     deviceInfo.serverId = serverId;
@@ -151,14 +152,13 @@ public class TCPClient {
                     out.close();
                     return 0;
 
-                } catch (IOException e) {
-                    Log.println(Log.ERROR, "Error", "Network Error!");
-                    e.printStackTrace();
-                    return -1;
-                } catch (IndexOutOfBoundsException e) {
-                    Log.println(Log.ERROR,"Error", "Message Error!");
-                    return -1;
+                } catch (SocketTimeoutException e) {
+                    return ERR_NETWORK_TIMEOUT;
+                } catch (Exception e) {
+                    Log.e("TCPClient", "Exception happens: ", e);
+                    return ERR_OTHERS;
                 }
+
             }
         });
 
@@ -166,25 +166,24 @@ public class TCPClient {
         try {
             addDeviceThread.join();
         } catch (InterruptedException e) {
-            return -1;
+            return ERR_INTERRUPTED;
         }
         return result[0];
 
     }
 
-    public void downloadStatRequest(String serverId, String serverPubKey) {
-
+    public int downloadStatRequest(String serverId, String serverPubKey) {
+        final int[] result = new int[1];
         Thread downloadStatThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                networkOperations();
+                result[0] = downloadStatNetOperations();
             }
 
-            private void networkOperations() {
+            private int downloadStatNetOperations() {
                 File receiveFile = new File(context.getCacheDir(), "watering_record_" + serverId + "_encrypted.db");
                 String outputDatabaseFileName = "watering_record_" + serverId + ".db";
                 File outputFile = context.getDatabasePath(outputDatabaseFileName);
-                //String receiveFilePath = "temp/watering_record_" + serverId + "_encrypted.db";
 
                 try (
                         Socket socket = new Socket(serverHost, serverPort);
@@ -192,6 +191,9 @@ public class TCPClient {
                         OutputStream outputStream = socket.getOutputStream();
                         FileOutputStream fileOutputStream = new FileOutputStream(receiveFile);
                 ) {
+                    //Set the socket timeout
+                    socket.setSoTimeout(SOCKET_TIMEOUT);
+
                     //For the messages
                     byte[] sendingBytes;
                     String sendingMessage;
@@ -214,7 +216,7 @@ public class TCPClient {
                     recvCommand = extractCommand(receivedMessage);
                     recvParams = extractParams(receivedMessage);
                     if(!(recvCommand.equals("stat_key") && recvParams.length == 2)) {
-                        return;
+                        return ERR_MESSAGE_CONTENT;
                     }
 
                     //Get aes key and iv in base64
@@ -228,11 +230,8 @@ public class TCPClient {
                     outputStream.flush();
 
                     //For the file
-                    //byte[] buffer = new byte[1024];
-                    //int bytesRead;
-
-                    // 接收文件大小
-                    byte[] fileSizeBytes = new byte[8]; // 文件大小是8字节的long类型
+                    //Receive file size
+                    byte[] fileSizeBytes = new byte[8];
                     int bytesRead = 0;
                     int offset = 0;
                     while (bytesRead < fileSizeBytes.length) {
@@ -247,10 +246,9 @@ public class TCPClient {
                         fileSize |= ((long) fileSizeBytes[i] & 0xFFL) << (i * 8);
                     }
 
-                    System.out.println("文件大小: " + fileSize + " bytes");
+                    System.out.println("File size: " + fileSize + " bytes");
 
-                    // 接收文件内容
-                    //FileOutputStream fos = new FileOutputStream("received_example.txt");
+                    //Receive file content
                     byte[] buffer = new byte[1024];
                     bytesRead = 0;
 
@@ -264,7 +262,7 @@ public class TCPClient {
                     fileOutputStream.close();
                     inputStream.close();
 
-                    System.out.println("文件接收完成");
+                    Log.d("TCPClient", "File received");
 
                     //Decrypt the file
                     SecretKey aesKey = AESUtils.extractKeyFromBase64(aesKeyBase64);
@@ -273,13 +271,13 @@ public class TCPClient {
                     AESUtils.decryptFile(receiveFile, outputFile, aesKey, iv);
 
                     //Delete the temp file
-                    //File
-
-                } catch (IOException e) {
-                    System.err.println("发生错误: " + e.getMessage());
-                    e.printStackTrace();
+                    receiveFile.delete();
+                    return 0;
+                } catch (SocketTimeoutException e) {
+                    return ERR_NETWORK_TIMEOUT;
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Log.e("TCPClient", "Exception happens: ", e);
+                    return ERR_OTHERS;
                 }
             }
         });
@@ -288,8 +286,9 @@ public class TCPClient {
         try {
             downloadStatThread.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            return ERR_INTERRUPTED;
         }
+        return result[0];
     }
 
     public int editModeRequest(String newMode, String newWaterAmount, String newScheduledFreq, String newScheduledTime, String serverPubkey) {
@@ -302,6 +301,9 @@ public class TCPClient {
 
             public int networkOperation() {
                 try (Socket socket = new Socket(serverHost, serverPort)) {
+                    //Set the socket timeout
+                    socket.setSoTimeout(SOCKET_TIMEOUT);
+
                     //InputStream is used for reading messages coming from server
                     InputStream in = socket.getInputStream();
 
@@ -328,14 +330,17 @@ public class TCPClient {
                     receiveLen = in.read(receiveBuffer);
                     receivedMessage = unpackEncryptedMessage(receiveBuffer);
                     if(!receivedMessage.equals("finish_edit_server()")) {
-                        return 1;   //Received message not correct
+                        return ERR_MESSAGE_CONTENT;   //Received message not correct
                     }
 
                     in.close();
                     out.close();
 
+                } catch(SocketTimeoutException e) {
+                    return ERR_NETWORK_TIMEOUT;
                 } catch(Exception e) {
-                    e.printStackTrace();
+                    Log.e("TCPClient", "Exception happens: ", e);
+                    return ERR_OTHERS;
                 }
                 return 0;
             }
@@ -344,7 +349,7 @@ public class TCPClient {
         try {
             editModeThread.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            return ERR_INTERRUPTED;
         }
 
         return result[0];
@@ -355,7 +360,14 @@ public class TCPClient {
         Thread wateringNowThread = new Thread(new Runnable() {
             @Override
             public void run() {
+                result[0] = wateringNetOperations();
+            }
+
+            private int wateringNetOperations() {
                 try (Socket socket = new Socket(serverHost, serverPort)) {
+                    //Set the socket timeout
+                    socket.setSoTimeout(SOCKET_TIMEOUT);
+
                     //InputStream is used for reading messages coming from server
                     InputStream in = socket.getInputStream();
 
@@ -374,6 +386,7 @@ public class TCPClient {
 
                     //Send watering_now() message
                     sendingMessage = "watering_now()";
+                    Log.d("Server pubkey:", serverPubkey);
                     sendingBytes = packMessageEncrypt(sendingMessage, serverPubkey);
                     out.write(sendingBytes);
                     out.flush();
@@ -383,16 +396,18 @@ public class TCPClient {
                     receivedMessage = unpackEncryptedMessage(receiveBuffer);
                     //Retrieve command
                     recvCommand = extractCommand(receivedMessage);
-                    //recvParams = extractParams(receivedMessage);
-                    //if(!recvCommand.equals("watering_succeed")) {
-                        //return -1;
-                    //}
+                    if(!recvCommand.equals("watering_succeed")) {
+                        return ERR_MESSAGE_CONTENT;
+                    }
                     in.close();
                     out.close();
 
-                    result[0] = 0;
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    return 0;
+                } catch (SocketTimeoutException e) {
+                    return ERR_NETWORK_TIMEOUT;
+                } catch (Exception e) {
+                    Log.e("TCPClient", "Exception happens:", e);
+                    return ERR_OTHERS;
                 }
             }
         });
@@ -400,9 +415,9 @@ public class TCPClient {
         try {
             wateringNowThread.join();
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            return ERR_INTERRUPTED;
         }
-        return 0;
+        return result[0];
 
     }
 
@@ -416,6 +431,9 @@ public class TCPClient {
 
             public int networkOperation() {
                 try (Socket socket = new Socket(serverHost, serverPort)) {
+                    //Set the socket timeout
+                    socket.setSoTimeout(SOCKET_TIMEOUT);
+
                     //InputStream is used for reading messages coming from server
                     InputStream in = socket.getInputStream();
 
@@ -443,12 +461,10 @@ public class TCPClient {
                     receiveLen = in.read(receiveBuffer);
                     receivedMessage = unpackEncryptedMessage(receiveBuffer);
                     if(receivedMessage == null) {   //If encrypted or no end tag -> error
-                        //Toast.makeText(context, "Message format error", Toast.LENGTH_SHORT).show();
                         return 1;
                     }
                     //Retrieve command and arguments
                     recvCommand = extractCommand(receivedMessage);
-                    //recvParams = extractParams(receivedMessage);
                     if(!recvCommand.equals("finish_del_device_server")) {
                         return -1;
                     }
@@ -460,13 +476,11 @@ public class TCPClient {
                     out.close();
                     return 0;
 
-                } catch (IOException e) {
-                    Log.println(Log.ERROR, "Error", "Network Error!");
-                    e.printStackTrace();
-                    return -1;
-                } catch (IndexOutOfBoundsException e) {
-                    Log.println(Log.ERROR,"Error", "Message Error!");
-                    return -1;
+                } catch (SocketTimeoutException e) {
+                    return ERR_NETWORK_TIMEOUT;
+                } catch (Exception e) {
+                    Log.e("TCPClient", "Exception happened:", e);
+                    return ERR_OTHERS;
                 }
             }
         });
@@ -475,11 +489,79 @@ public class TCPClient {
         try {
             delDeviceThread.join();
         } catch (InterruptedException e) {
-            return -1;
+            return ERR_INTERRUPTED;
         }
         return result[0];
     }
 
+    public int deleteStatRequest(String serverId, String serverPubkey) {
+        final int[] result = new int[1];
+        Thread deleteStatThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                result[0] = delStatNetOperations();
+            }
+
+            private int delStatNetOperations() {
+                try (Socket socket = new Socket(serverHost, serverPort)) {
+                    //Set the socket timeout
+                    socket.setSoTimeout(SOCKET_TIMEOUT);
+
+                    //InputStream is used for reading messages coming from server
+                    InputStream in = socket.getInputStream();
+
+                    //OutputStream is used for sending messages to the server
+                    OutputStream out = socket.getOutputStream();
+
+                    //Variables for sending and receiving
+                    byte[] sendingBytes;
+                    String sendingMessage;
+
+                    byte[] receiveBuffer = new byte[1024];
+                    int receiveLen;
+                    String receivedMessage;
+                    String recvCommand;
+                    String[] recvParams;
+
+                    //Send del_device()
+                    sendingMessage = "del_stat()";
+                    sendingBytes = packMessageEncrypt(sendingMessage, serverPubkey);
+                    out.write(sendingBytes);
+                    out.flush();
+
+                    //Receive finish_del_stat_server()
+                    receiveLen = in.read(receiveBuffer);
+                    receivedMessage = unpackEncryptedMessage(receiveBuffer);
+                    if(receivedMessage == null) {   //If encrypted or no end tag -> error
+                        return ERR_MESSAGE_FORMAT;
+                    }
+                    //Retrieve command and arguments
+                    recvCommand = extractCommand(receivedMessage);
+                    if(!recvCommand.equals("finish_del_stat_server")) {
+                        return ERR_MESSAGE_CONTENT;
+                    }
+
+                    //Close the input and output stream
+                    in.close();
+                    out.close();
+                    return 0;
+
+                } catch (SocketTimeoutException e) {
+                    return ERR_NETWORK_TIMEOUT;
+                } catch (Exception e) {
+                    Log.e("TCPClient", "Exception happens:", e);
+                    return ERR_OTHERS;
+                }
+            }
+        });
+        deleteStatThread.start();
+        try {
+            deleteStatThread.join();
+        } catch (InterruptedException e) {
+            return ERR_INTERRUPTED;
+        }
+        return result[0];
+    }
     private byte[] packMessageNoEncrypt(String message) {
         //Create result array
         byte[] packedMessage = new byte[message.length() + 2];
@@ -501,6 +583,8 @@ public class TCPClient {
         return packedMessage;
 
     }
+
+
 
     private byte[] packMessageEncrypt(String message, String serverPubKey) {
         //Encrypt the message

@@ -27,6 +27,7 @@
                 android:text="Refresh"/>
 
             <Button
+                android:id="@+id/button_stat_delete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -36,14 +37,19 @@
         </LinearLayout>
 
         <com.github.mikephil.charting.charts.BarChart
-            android:id="@+id/barChart"
+            android:id="@+id/water_consumption_barChart"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="200dp"/>
 
         <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/lineChart"
+            android:id="@+id/times_of_watering_lineChart"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="200dp" />
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/soil_moisture_lineChart"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"/>
 
     </LinearLayout>
 

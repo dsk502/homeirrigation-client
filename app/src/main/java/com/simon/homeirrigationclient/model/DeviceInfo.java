@@ -78,9 +78,14 @@ public class DeviceInfo {
         this.scheduledFreq = 2;
     }
 
-    //Init the TCPClient and WateringRecordHelper objects after the creation of DeviceInfo object
-    public void initNetAndRecHelper(Context context) {
+    //Init the TCPClient object after the creation of DeviceInfo object
+    public void initTCP(Context context) {
         tcpClient = new TCPClient(context, this.host, this.port);
+    }
+
+
+    public void initRec(Context context) {
         wateringRecordDatabaseHelper = new WateringRecordDatabaseHelper(context, "watering_record_" + this.serverId + ".db");
+
     }
 }

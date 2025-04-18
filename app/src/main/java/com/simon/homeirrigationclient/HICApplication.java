@@ -43,10 +43,15 @@ public class HICApplication extends Application {
         //3. Read all servers' info to the global variable
         servers = HICApplication.getInstance().deviceDatabaseHelper.getAllDeviceInfo();
 
-        //4. For every device info object, create its own TCPClient and WateringRecordHelper objects
+        //4. For every device info object, create its own TCPClient object
         for(int i = 0; i < servers.size(); i++) {
-            servers.get(i).initNetAndRecHelper(this);
+            servers.get(i).initTCP(this);
         }
+
+        //5. For every device info object, if the database file exists in the local disk, create the watering record helper object
+        //for(int i = 0; i < servers.size(); i++) {
+            //servers.get(i).initRec(this);
+        //}
     }
     public static HICApplication getInstance() {
         return instance;
