@@ -1,13 +1,7 @@
 package com.simon.homeirrigationclient.ui.machine;
 
-import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.view.ViewStub;
-import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.appcompat.widget.Toolbar;
 
@@ -20,7 +14,6 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import com.simon.homeirrigationclient.HICApplication;
 import com.simon.homeirrigationclient.R;
 import com.simon.homeirrigationclient.databinding.ActivityMachineBinding;
 import com.simon.homeirrigationclient.model.DeviceInfo;

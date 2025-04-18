@@ -5,10 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 public class WateringRecordDatabaseHelper extends SQLiteOpenHelper {
 
@@ -39,11 +36,9 @@ public class WateringRecordDatabaseHelper extends SQLiteOpenHelper {
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
-                // 获取字段 a 和字段 b 的值
                 String key = cursor.getString(cursor.getColumnIndexOrThrow("day"));
                 String value = cursor.getString(cursor.getColumnIndexOrThrow("times_of_watering"));
 
-                // 将键值对存入 Map
                 timesOfWatering.put(key, value);
             } while (cursor.moveToNext());
             cursor.close();
@@ -60,11 +55,9 @@ public class WateringRecordDatabaseHelper extends SQLiteOpenHelper {
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
-                // 获取字段 a 和字段 b 的值
                 String key = cursor.getString(cursor.getColumnIndexOrThrow("day"));
                 String value = cursor.getString(cursor.getColumnIndexOrThrow("amount_of_watering"));
 
-                // 将键值对存入 Map
                 amountOfWatering.put(key, value);
             } while (cursor.moveToNext());
             cursor.close();
@@ -81,11 +74,9 @@ public class WateringRecordDatabaseHelper extends SQLiteOpenHelper {
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
-                // 获取字段 a 和字段 b 的值
                 String key = cursor.getString(cursor.getColumnIndexOrThrow("day"));
                 String value = cursor.getString(cursor.getColumnIndexOrThrow("soil_moisture_percentage"));
 
-                // 将键值对存入 Map
                 soilMoisturePercentage.put(key, value);
             } while (cursor.moveToNext());
             cursor.close();

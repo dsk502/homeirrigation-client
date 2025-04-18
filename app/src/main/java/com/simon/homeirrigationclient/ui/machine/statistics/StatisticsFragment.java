@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -25,6 +26,7 @@ import com.simon.homeirrigationclient.HICApplication;
 import com.simon.homeirrigationclient.R;
 import com.simon.homeirrigationclient.databinding.FragmentStatisticsBinding;
 import com.simon.homeirrigationclient.model.DeviceInfo;
+import com.simon.homeirrigationclient.model.TCPClient;
 import com.simon.homeirrigationclient.model.WateringRecordDatabaseHelper;
 import com.simon.homeirrigationclient.ui.machine.dashboard.DashboardViewModel;
 
@@ -40,9 +42,6 @@ public class StatisticsFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-
-        StatisticsViewModel statisticsViewModel =
-                new ViewModelProvider(this).get(StatisticsViewModel.class);
 
         binding = FragmentStatisticsBinding.inflate(inflater, container, false);
         return binding.getRoot();
@@ -69,7 +68,25 @@ public class StatisticsFragment extends Fragment {
             public void onClick(View v) {
                 //Download stat
                 //currentDeviceInfo.wateringRecordDatabaseHelper = null;
-                currentDeviceInfo.tcpClient.downloadStatRequest(currentDeviceInfo.serverId, currentDeviceInfo.serverPubkey);
+                int downloadStatResult = currentDeviceInfo.tcpClient.downloadStatRequest(currentDeviceInfo.serverId, currentDeviceInfo.serverPubkey);
+                switch(downloadStatResult) {
+                    case TCPClient.ERR_NETWORK_TIMEOUT:
+                        Toast.makeText(requireContext(), "Error: Network timeout", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_MESSAGE_FORMAT:
+                        Toast.makeText(requireContext(), "Error: Message format is wrong", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_MESSAGE_CONTENT:
+                        Toast.makeText(requireContext(), "Error: Message content is wrong", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_INTERRUPTED:
+                        Toast.makeText(requireContext(), "Error: Device added", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_OTHERS:
+                        Toast.makeText(requireContext(), "Unknown error", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+
                 currentDeviceInfo.wateringRecordDatabaseHelper = new WateringRecordDatabaseHelper(requireContext(), "watering_record_" + currentDeviceInfo.serverId + ".db");
 
                 //Display stat
@@ -83,11 +100,30 @@ public class StatisticsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 //Delete the data on the server
-                currentDeviceInfo.tcpClient.deleteStatRequest(currentDeviceInfo.serverId, currentDeviceInfo.serverPubkey);
-                //Delete the record helper object
-                currentDeviceInfo.wateringRecordDatabaseHelper = null;
-                //Delete the local record file
-                wateringRecordFile.delete();
+                int delDataResult = currentDeviceInfo.tcpClient.deleteStatRequest(currentDeviceInfo.serverId, currentDeviceInfo.serverPubkey);
+                switch(delDataResult) {
+                    case 0:
+                        //Delete the record helper object
+                        currentDeviceInfo.wateringRecordDatabaseHelper = null;
+                        //Delete the local record file
+                        wateringRecordFile.delete();
+                        break;
+                    case TCPClient.ERR_NETWORK_TIMEOUT:
+                        Toast.makeText(requireContext(), "Error: Network timeout", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_MESSAGE_FORMAT:
+                        Toast.makeText(requireContext(), "Error: Message format is wrong", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_MESSAGE_CONTENT:
+                        Toast.makeText(requireContext(), "Error: Message content is wrong", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_INTERRUPTED:
+                        Toast.makeText(requireContext(), "Error: Device added", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_OTHERS:
+                        Toast.makeText(requireContext(), "Unknown error", Toast.LENGTH_SHORT).show();
+                        break;
+                }
             }
         });
     }
@@ -121,22 +157,22 @@ public class StatisticsFragment extends Fragment {
             index++;
         }
 
-        // 创建 LineDataSet
-        LineDataSet dataSet = new LineDataSet(entries, dataSetLabel); // 添加标签
-        dataSet.setColor(Color.BLUE); // 设置折线颜色
-        dataSet.setLineWidth(2f); // 设置折线宽度
-        dataSet.setCircleColor(Color.RED); // 设置数据点颜色
-        dataSet.setCircleRadius(5f); // 设置数据点大小
-        dataSet.setValueTextSize(10f); // 设置数据点文本大小
-        dataSet.setValueTextColor(Color.BLACK); // 设置数据点文本颜色
+        //Create LineDataSet
+        LineDataSet dataSet = new LineDataSet(entries, dataSetLabel); //Add label
+        dataSet.setColor(Color.BLUE); //Set line color
+        dataSet.setLineWidth(2f); //Set line width
+        dataSet.setCircleColor(Color.RED); //Set data point color
+        dataSet.setCircleRadius(5f); //Set data point size
+        dataSet.setValueTextSize(10f); //Set text size
+        dataSet.setValueTextColor(Color.BLACK); // Set text color
 
-        // 创建 LineData
+        //Create LineData
         LineData lineData = new LineData(dataSet);
 
-        // 设置数据到 LineChart
+        //Bind the data to LineChart
         lineChart.setData(lineData);
 
-        // 自定义 X 轴显示日期
+        //Set date on x axis
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
@@ -150,13 +186,13 @@ public class StatisticsFragment extends Fragment {
         });
 
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setGranularity(1f); // 最小间隔为 1
-        xAxis.setGranularityEnabled(true); // 禁止自动调整间隔
-        // 启用横向滚动
-        lineChart.setScaleEnabled(true); // 启用缩放
-        lineChart.setDragEnabled(true);  // 启用拖动
-        lineChart.setPinchZoom(false);   // 禁用双指缩放
-        // 刷新图表
+        xAxis.setGranularity(1f); // Min gap is 1
+        xAxis.setGranularityEnabled(true); // No adjusting gap
+        //Scroll horizontally
+        lineChart.setScaleEnabled(true);
+        lineChart.setDragEnabled(true);
+        lineChart.setPinchZoom(false);
+        //Refresh the chart
         lineChart.invalidate();
     }
 
@@ -172,19 +208,19 @@ public class StatisticsFragment extends Fragment {
             index++;
         }
 
-        // 创建 LineDataSet
-        BarDataSet dataSet = new BarDataSet(entries, dataSetLabel); // 添加标签
-        dataSet.setColor(Color.BLUE); // 设置折线颜色
-        dataSet.setValueTextSize(10f); // 设置数据点文本大小
-        dataSet.setValueTextColor(Color.BLACK); // 设置数据点文本颜色
+        //Create BarDataSet
+        BarDataSet dataSet = new BarDataSet(entries, dataSetLabel); //Add label
+        dataSet.setColor(Color.BLUE); // Set bar color
+        dataSet.setValueTextSize(10f); // Set text size
+        dataSet.setValueTextColor(Color.BLACK); // Set text color
 
-        // 创建 LineData
+        //Create BarData
         BarData barData = new BarData(dataSet);
 
-        // 设置数据到 LineChart
+        //Bind the data to BarChart
         barChart.setData(barData);
 
-        // 自定义 X 轴显示日期
+        //Show date on x axis
         XAxis xAxis = barChart.getXAxis();
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
@@ -198,14 +234,13 @@ public class StatisticsFragment extends Fragment {
         });
 
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setGranularity(1f); // 最小间隔为 1
-        xAxis.setGranularityEnabled(true); // 禁止自动调整间隔
+        xAxis.setGranularity(1f);
+        xAxis.setGranularityEnabled(true);
 
-        barChart.setScaleEnabled(true); // 启用缩放
-        barChart.setDragEnabled(true);  // 启用拖动
-        barChart.setPinchZoom(false);   // 禁用双指缩放
+        barChart.setScaleEnabled(true);
+        barChart.setDragEnabled(true);
+        barChart.setPinchZoom(false);
 
-        // 刷新图表
         barChart.invalidate();
     }
 

@@ -82,7 +82,6 @@
         android:layout_marginStart="5dp"
         android:textSize="18sp"/>
 
-    <!-- 按钮 -->
     <LinearLayout
         style="?android:attr/buttonBarStyle"
         android:layout_width="match_parent"

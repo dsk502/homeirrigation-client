@@ -5,7 +5,6 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
-import java.security.SecureRandom;
 import java.util.Base64;
 
 //class for AES-256
@@ -16,7 +15,7 @@ public class AESUtils {
     private static final int KEY_SIZE = 256; // AES-256
     private static final int IV_SIZE = 16; // 128 bits
 
-    // 从Base64编码的字符串中提取密钥和IV
+    //Extract AES key and IV from Base64
     public static SecretKey extractKeyFromBase64(String base64Key) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(base64Key);
         return new SecretKeySpec(keyBytes, AES);
@@ -28,7 +27,7 @@ public class AESUtils {
     }
 
 
-    // 解密文件
+    //Decrypt the file
     public static void decryptFile(File inputFile, File outputFile, SecretKey key, IvParameterSpec iv) throws Exception {
         Cipher cipher = Cipher.getInstance(TRANSFORMATION);
         cipher.init(Cipher.DECRYPT_MODE, key, iv);
@@ -49,27 +48,6 @@ public class AESUtils {
             }
         }
 
-        System.out.println("文件解密成功: " + outputFile);
     }
 
-    /*
-    public static void main(String[] args) {
-        try {
-            // 假设密钥和IV已经以Base64编码的形式存储
-            String base64Key = "yourBase64EncodedKeyHere";
-            String base64IV = "yourBase64EncodedIVHere";
-
-            // 提取密钥和IV
-            SecretKey key = extractKeyFromBase64(base64Key);
-            IvParameterSpec iv = extractIVFromBase64(base64IV);
-
-            // 解密文件
-            String inputFilePath = "path/to/encrypted/file.enc";
-            String outputFilePath = "path/to/decrypted/file.dec";
-            decryptFile(inputFilePath, outputFilePath, key, iv);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    */
 }

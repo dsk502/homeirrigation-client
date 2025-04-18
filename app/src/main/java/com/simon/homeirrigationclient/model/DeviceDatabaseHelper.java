@@ -1,7 +1,6 @@
 package com.simon.homeirrigationclient.model;
 
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothClass;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -9,7 +8,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class DeviceDatabaseHelper extends SQLiteOpenHelper {
     //Database name
@@ -110,16 +108,6 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
         }
         db.close();
         return deviceInfoList;
-    }
-
-    //Get the statistics of a single device from local database
-    public void getDeviceStat(String serverId) {
-
-    }
-
-    //Sync watering data from the server
-    public void syncServerWateringData() {
-
     }
 
     //Get the timestamp of the client adding the Raspberry Pi

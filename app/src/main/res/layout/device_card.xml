@@ -50,7 +50,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="" />
-        <!-- 可以添加更多的视图组件 -->
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

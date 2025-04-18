@@ -51,37 +51,12 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navViewMain, navController);
-
-
-
-        //Set GridView
-        //setGridView();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        //Refresh GridView data
-        //setGridView();
 
-    }
-
-    //Set the data and event of the gridview
-    private void setGridView() {
-        GridView gridView = findViewById(R.id.gridView_device_card);
-        ArrayList<DeviceInfo> deviceInfoList = HICApplication.getInstance().servers;
-        DeviceCardGridViewAdapter gridViewAdapter = new DeviceCardGridViewAdapter(this, deviceInfoList);
-        gridView.setAdapter(gridViewAdapter);
-
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(MainActivity.this, MachineActivity.class);
-                //The index of the device info object corresponding to this device card is the position
-                intent.putExtra("indexOfDeviceInfo", position);
-                startActivity(intent);
-            }
-        });
     }
 
 }

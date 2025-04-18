@@ -11,9 +11,13 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -24,16 +28,13 @@ public class TCPClient {
     public String serverHost;
     public int serverPort;
 
-    private final int SOCKET_TIMEOUT = 5000;    //The timeout is 5000ms
-
+    private final int THREAD_TIMEOUT = 8000;  //The timeout is 8000ms
     //Define error return values
-    public final int ERR_NETWORK_TIMEOUT = 1;
-    public final int ERR_MESSAGE_FORMAT = 2;   //If the head (is encrypted) or tail (\n) tag of the message is unexpected value, return this number
-    public final int ERR_MESSAGE_CONTENT = 3;  //If the content of the message (command or parameters) is unexpected value, return this number
-    public final int ERR_INTERRUPTED = 4;
-    public final int ERR_OTHERS = 5;
-
-
+    public static final int ERR_NETWORK_TIMEOUT = 1;
+    public static final int ERR_MESSAGE_FORMAT = 2;   //If the head (is encrypted) or tail (\n) tag of the message is unexpected value, return this number
+    public static final int ERR_MESSAGE_CONTENT = 3;  //If the content of the message (command or parameters) is unexpected value, return this number
+    public static final int ERR_INTERRUPTED = 4;
+    public static final int ERR_OTHERS = 5;
 
     public TCPClient(Context context, String serverHost, int serverPort) {
         this.context = context;
@@ -44,6 +45,8 @@ public class TCPClient {
 
     public int addDeviceRequest(String clientPubkey, DeviceInfo deviceInfo) {
         final int[] result = new int[1];
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
         Thread addDeviceThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -52,9 +55,6 @@ public class TCPClient {
 
             public int addDeviceNetOperations() {
                 try (Socket socket = new Socket(serverHost, serverPort)) {
-                    //Set the socket timeout
-                    socket.setSoTimeout(SOCKET_TIMEOUT);
-
                     String serverPubKey = "";
                     //InputStream is used for reading messages coming from server
                     InputStream in = socket.getInputStream();
@@ -105,7 +105,7 @@ public class TCPClient {
                     //Receive and process request_add_param(server_id) -- encrypted
                     receiveLen = in.read(receiveBuffer);
                     receivedMessage = unpackEncryptedMessage(receiveBuffer);
-                    Log.println(Log.ERROR, "Received Message:", receivedMessage);
+                    //Log.println(Log.ERROR, "Received Message:", receivedMessage);
                     recvCommand = extractCommand(receivedMessage);
                     recvParams = extractParams(receivedMessage);
                     if(!(recvCommand.equals("request_add_param") && recvParams.length == 1)) {
@@ -126,7 +126,7 @@ public class TCPClient {
                     //Receive finish_add_server() -- encrypted
                     receiveLen = in.read(receiveBuffer);
                     receivedMessage = unpackEncryptedMessage(receiveBuffer);
-                    Log.println(Log.ERROR, "Finish add server: ", receivedMessage);
+                    //Log.println(Log.ERROR, "Finish add server: ", receivedMessage);
                     recvCommand = extractCommand(receivedMessage);
                     if(!recvCommand.equals("finish_add_server")) {
                         return ERR_MESSAGE_CONTENT;
@@ -143,7 +143,7 @@ public class TCPClient {
                     //Reply finish_add_client()
                     sendingMessage = "finish_add_client()";
                     sendingBytes = packMessageEncrypt(sendingMessage, serverPubKey);
-                    Log.println(Log.ERROR, "Finish add client: ", new String(sendingBytes));
+                    //Log.println(Log.ERROR, "Finish add client: ", new String(sendingBytes));
                     out.write(sendingBytes);
                     out.flush();
 
@@ -152,8 +152,6 @@ public class TCPClient {
                     out.close();
                     return 0;
 
-                } catch (SocketTimeoutException e) {
-                    return ERR_NETWORK_TIMEOUT;
                 } catch (Exception e) {
                     Log.e("TCPClient", "Exception happens: ", e);
                     return ERR_OTHERS;
@@ -162,18 +160,26 @@ public class TCPClient {
             }
         });
 
-        addDeviceThread.start();
+        Future<?> future = executor.submit(addDeviceThread);
         try {
-            addDeviceThread.join();
-        } catch (InterruptedException e) {
-            return ERR_INTERRUPTED;
+            future.get(THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true); // Stop the task
+            result[0] = ERR_NETWORK_TIMEOUT;
+        } catch (Exception e) {
+            result[0] = ERR_INTERRUPTED;
         }
+        finally {
+            executor.shutdownNow();
+        }
+
         return result[0];
 
     }
 
     public int downloadStatRequest(String serverId, String serverPubKey) {
         final int[] result = new int[1];
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         Thread downloadStatThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -191,9 +197,6 @@ public class TCPClient {
                         OutputStream outputStream = socket.getOutputStream();
                         FileOutputStream fileOutputStream = new FileOutputStream(receiveFile);
                 ) {
-                    //Set the socket timeout
-                    socket.setSoTimeout(SOCKET_TIMEOUT);
-
                     //For the messages
                     byte[] sendingBytes;
                     String sendingMessage;
@@ -273,8 +276,6 @@ public class TCPClient {
                     //Delete the temp file
                     receiveFile.delete();
                     return 0;
-                } catch (SocketTimeoutException e) {
-                    return ERR_NETWORK_TIMEOUT;
                 } catch (Exception e) {
                     Log.e("TCPClient", "Exception happens: ", e);
                     return ERR_OTHERS;
@@ -282,17 +283,25 @@ public class TCPClient {
             }
         });
 
-        downloadStatThread.start();
+        Future<?> future = executor.submit(downloadStatThread);
         try {
-            downloadStatThread.join();
-        } catch (InterruptedException e) {
-            return ERR_INTERRUPTED;
+            future.get(THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true); // Stop the task
+            result[0] = ERR_NETWORK_TIMEOUT;
+        } catch (Exception e) {
+            result[0] = ERR_INTERRUPTED;
         }
+        finally {
+            executor.shutdownNow();
+        }
+
         return result[0];
     }
 
     public int editModeRequest(String newMode, String newWaterAmount, String newScheduledFreq, String newScheduledTime, String serverPubkey) {
         final int[] result = new int[1];
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         Thread editModeThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -301,9 +310,6 @@ public class TCPClient {
 
             public int networkOperation() {
                 try (Socket socket = new Socket(serverHost, serverPort)) {
-                    //Set the socket timeout
-                    socket.setSoTimeout(SOCKET_TIMEOUT);
-
                     //InputStream is used for reading messages coming from server
                     InputStream in = socket.getInputStream();
 
@@ -335,21 +341,26 @@ public class TCPClient {
 
                     in.close();
                     out.close();
-
-                } catch(SocketTimeoutException e) {
-                    return ERR_NETWORK_TIMEOUT;
+                    return 0;
                 } catch(Exception e) {
                     Log.e("TCPClient", "Exception happens: ", e);
                     return ERR_OTHERS;
                 }
-                return 0;
+
             }
         });
-        editModeThread.start();
+
+        Future<?> future = executor.submit(editModeThread);
         try {
-            editModeThread.join();
-        } catch (InterruptedException e) {
-            return ERR_INTERRUPTED;
+            future.get(THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true); // Stop the task
+            result[0] = ERR_NETWORK_TIMEOUT;
+        } catch (Exception e) {
+            result[0] = ERR_INTERRUPTED;
+        }
+        finally {
+            executor.shutdownNow();
         }
 
         return result[0];
@@ -357,16 +368,16 @@ public class TCPClient {
 
     public int wateringNowRequest(String serverPubkey) {
         final int[] result = new int[1];
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
         Thread wateringNowThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 result[0] = wateringNetOperations();
             }
-
             private int wateringNetOperations() {
                 try (Socket socket = new Socket(serverHost, serverPort)) {
-                    //Set the socket timeout
-                    socket.setSoTimeout(SOCKET_TIMEOUT);
 
                     //InputStream is used for reading messages coming from server
                     InputStream in = socket.getInputStream();
@@ -386,7 +397,7 @@ public class TCPClient {
 
                     //Send watering_now() message
                     sendingMessage = "watering_now()";
-                    Log.d("Server pubkey:", serverPubkey);
+                    //Log.d("Server pubkey:", serverPubkey);
                     sendingBytes = packMessageEncrypt(sendingMessage, serverPubkey);
                     out.write(sendingBytes);
                     out.flush();
@@ -403,26 +414,34 @@ public class TCPClient {
                     out.close();
 
                     return 0;
-                } catch (SocketTimeoutException e) {
-                    return ERR_NETWORK_TIMEOUT;
                 } catch (Exception e) {
                     Log.e("TCPClient", "Exception happens:", e);
                     return ERR_OTHERS;
                 }
             }
         });
-        wateringNowThread.start();
+
+        Future<?> future = executor.submit(wateringNowThread);
         try {
-            wateringNowThread.join();
-        } catch (InterruptedException e) {
-            return ERR_INTERRUPTED;
+            future.get(THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true); // Stop the task
+            result[0] = ERR_NETWORK_TIMEOUT;
+        } catch (Exception e) {
+            result[0] = ERR_INTERRUPTED;
         }
+        finally {
+            executor.shutdownNow();
+        }
+
         return result[0];
 
     }
 
     public int deleteDeviceRequest(String serverId, String serverPubkey) {
         final int[] result = new int[1];
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
         Thread delDeviceThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -431,9 +450,6 @@ public class TCPClient {
 
             public int networkOperation() {
                 try (Socket socket = new Socket(serverHost, serverPort)) {
-                    //Set the socket timeout
-                    socket.setSoTimeout(SOCKET_TIMEOUT);
-
                     //InputStream is used for reading messages coming from server
                     InputStream in = socket.getInputStream();
 
@@ -476,8 +492,6 @@ public class TCPClient {
                     out.close();
                     return 0;
 
-                } catch (SocketTimeoutException e) {
-                    return ERR_NETWORK_TIMEOUT;
                 } catch (Exception e) {
                     Log.e("TCPClient", "Exception happened:", e);
                     return ERR_OTHERS;
@@ -485,17 +499,26 @@ public class TCPClient {
             }
         });
 
-        delDeviceThread.start();
+        Future<?> future = executor.submit(delDeviceThread);
         try {
-            delDeviceThread.join();
-        } catch (InterruptedException e) {
-            return ERR_INTERRUPTED;
+            future.get(THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true); // Stop the task
+            result[0] = ERR_NETWORK_TIMEOUT;
+        } catch (Exception e) {
+            result[0] = ERR_INTERRUPTED;
         }
+        finally {
+            executor.shutdownNow();
+        }
+
         return result[0];
     }
 
     public int deleteStatRequest(String serverId, String serverPubkey) {
         final int[] result = new int[1];
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
         Thread deleteStatThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -504,9 +527,6 @@ public class TCPClient {
 
             private int delStatNetOperations() {
                 try (Socket socket = new Socket(serverHost, serverPort)) {
-                    //Set the socket timeout
-                    socket.setSoTimeout(SOCKET_TIMEOUT);
-
                     //InputStream is used for reading messages coming from server
                     InputStream in = socket.getInputStream();
 
@@ -546,20 +566,26 @@ public class TCPClient {
                     out.close();
                     return 0;
 
-                } catch (SocketTimeoutException e) {
-                    return ERR_NETWORK_TIMEOUT;
                 } catch (Exception e) {
                     Log.e("TCPClient", "Exception happens:", e);
                     return ERR_OTHERS;
                 }
             }
         });
-        deleteStatThread.start();
+
+        Future<?> future = executor.submit(deleteStatThread);
         try {
-            deleteStatThread.join();
-        } catch (InterruptedException e) {
-            return ERR_INTERRUPTED;
+            future.get(THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true); // Stop the task
+            result[0] = ERR_NETWORK_TIMEOUT;
+        } catch (Exception e) {
+            result[0] = ERR_INTERRUPTED;
         }
+        finally {
+            executor.shutdownNow();
+        }
+
         return result[0];
     }
     private byte[] packMessageNoEncrypt(String message) {
@@ -630,7 +656,6 @@ public class TCPClient {
         //Log.println(Log.ERROR, "messageblock length:", String.valueOf(indexOfEndTag));
         System.arraycopy(receiveBuffer, 1, messageBlock, 0, messageBlock.length);
         String messageBlockStr = new String(messageBlock);
-        //String messageBlockStr = "fC8gXztvEAuxMrmvgeg8FQ5J5VRSLQj8OW/UV8S0XpSLR99a8EhxO4layFyAif5Hu/5IcCQVZHaDbNxCgB1DhfbDTt1RFeMP6LQ3Xv4XYOzsusC3rgkDrISgOJCQPf2N8fFGuSMORe/tVEQvQN0u0lyOToV1U/nDgpHPfvuwOR5LOK9TB/A+sFlEEA0gqi61zFkO1FfEMQii4laQcBPkLYQ5OajiDUrm9BDQIhruUj9Z/WE9JBjUFurameRCeBUjJQ6Pa+/da3ePAV2xazQCEmCH3JikX++h60qRyGeYnnz2x5yMnlNFEDsjj1e1CF5NuYu+3TyLRm1iuGeNqyvkmA==";
 
         String messagePT = "";
         try {
@@ -639,8 +664,8 @@ public class TCPClient {
             //Log.println(Log.ERROR, "Private key:", privateKeyStr);
             PrivateKey rsaPrivateKey = rsaUtils.loadPrivateKey(privateKeyStr);
             Log.println(Log.ERROR, "Private key loaded", "OK");
-            Log.println(Log.ERROR, "Cipher Text:", messageBlockStr);
-            Log.println(Log.ERROR, "Cipher text length:", String.valueOf(messageBlockStr.length()));
+            //Log.println(Log.ERROR, "Cipher Text:", messageBlockStr);
+            //Log.println(Log.ERROR, "Cipher text length:", String.valueOf(messageBlockStr.length()));
             messagePT = rsaUtils.rsaDecrypt(messageBlockStr, rsaPrivateKey);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -661,9 +686,9 @@ public class TCPClient {
     public static int findIndexOf(byte[] array, byte target) {
         for (int i = 0; i < array.length; i++) {
             if (array[i] == target) {
-                return i; // 返回找到的索引
+                return i;
             }
         }
-        return -1; // 如果没有找到，返回-1
+        return -1;
     }
 }

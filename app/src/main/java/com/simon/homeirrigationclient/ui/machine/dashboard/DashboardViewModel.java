@@ -65,35 +65,6 @@ public class DashboardViewModel extends ViewModel {
         mWaterAmount.setValue(currentDeviceInfo.waterAmount);
         mScheduledFreq.setValue(currentDeviceInfo.scheduledFreq);
         mScheduledTime.setValue(currentDeviceInfo.scheduledTime);
-        /*
-        if(currentDeviceInfo.mode == 1) {   //Scheduled
-            mMode.setValue("Scheduled");
-            switch(currentDeviceInfo.scheduledFreq) {
-                case 1: //Every day
-                    mScheduledFreqHint.setValue("Scheduled Frequency: Every day");
-                    break;
-                case 2: //Every 2 days
-                    mScheduledFreqHint.setValue("Scheduled Frequency: Every 2 days");
-                    break;
-                case 3: //Every three days
-                    mScheduledFreqHint.setValue("Scheduled Frequency: Every 3 days");
-                    break;
-                case 4: //Every week
-                    mScheduledFreqHint.setValue("Scheduled Frequency: Every week");
-                    break;
-            }
-            mScheduledTimeHint.setValue("Scheduled Time: " + currentDeviceInfo.scheduledTime);
-        } else if(currentDeviceInfo.mode == 2) {    //Manual
-            mMode.setValue("Manual");
-            mScheduledFreqHint.setValue("");
-            mScheduledTimeHint.setValue("");
-        } else {
-            mMode.setValue("");
-            mScheduledFreqHint.setValue("");
-            mScheduledTimeHint.setValue("");
-        }
-
-         */
 
     }
 

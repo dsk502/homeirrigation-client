@@ -82,10 +82,4 @@ public class DeviceInfo {
     public void initTCP(Context context) {
         tcpClient = new TCPClient(context, this.host, this.port);
     }
-
-
-    public void initRec(Context context) {
-        wateringRecordDatabaseHelper = new WateringRecordDatabaseHelper(context, "watering_record_" + this.serverId + ".db");
-
-    }
 }

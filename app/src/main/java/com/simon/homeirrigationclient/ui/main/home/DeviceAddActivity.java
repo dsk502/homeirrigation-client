@@ -35,7 +35,7 @@ public class DeviceAddActivity extends AppCompatActivity {
 
             @Override
             public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
-                // 允许输入点
+                //Allow "."
                 if (source.toString().matches("[A-Za-z0-9.]")) {
                     return source;
                 }
@@ -70,11 +70,26 @@ public class DeviceAddActivity extends AppCompatActivity {
 
                 //Add the device
                 int addDeviceResult = newDeviceInfo.tcpClient.addDeviceRequest(clientPubkey, newDeviceInfo);
-                if(addDeviceResult == 0) {
-                    HICApplication.getInstance().servers.add(newDeviceInfo);
-                    Toast.makeText(DeviceAddActivity.this, "Device added", Toast.LENGTH_SHORT).show();
-                } else if(addDeviceResult == 1){
-                    Toast.makeText(DeviceAddActivity.this, "Message format Error", Toast.LENGTH_SHORT).show();
+                switch(addDeviceResult) {
+                    case 0:
+                        HICApplication.getInstance().servers.add(newDeviceInfo);
+                        Toast.makeText(DeviceAddActivity.this, "Device added", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_NETWORK_TIMEOUT:
+                        Toast.makeText(DeviceAddActivity.this, "Error: Network timeout", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_MESSAGE_FORMAT:
+                        Toast.makeText(DeviceAddActivity.this, "Error: Message format is wrong", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_MESSAGE_CONTENT:
+                        Toast.makeText(DeviceAddActivity.this, "Error: Message content is wrong", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_INTERRUPTED:
+                        Toast.makeText(DeviceAddActivity.this, "Error: Device added", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_OTHERS:
+                        Toast.makeText(DeviceAddActivity.this, "Unknown error", Toast.LENGTH_SHORT).show();
+                        break;
                 }
 
                 //Back to the main activity

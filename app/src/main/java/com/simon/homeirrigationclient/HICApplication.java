@@ -48,10 +48,6 @@ public class HICApplication extends Application {
             servers.get(i).initTCP(this);
         }
 
-        //5. For every device info object, if the database file exists in the local disk, create the watering record helper object
-        //for(int i = 0; i < servers.size(); i++) {
-            //servers.get(i).initRec(this);
-        //}
     }
     public static HICApplication getInstance() {
         return instance;

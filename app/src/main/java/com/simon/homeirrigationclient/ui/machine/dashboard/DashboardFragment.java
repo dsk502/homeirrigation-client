@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -206,19 +207,37 @@ public class DashboardFragment extends Fragment {
 
                         //Try to update through network
                         DeviceInfo currentDeviceInfo = HICApplication.getInstance().servers.get(dashboardViewModel.indexOfDeviceInfo);
-                        currentDeviceInfo.tcpClient.editModeRequest(String.valueOf(newMode), String.valueOf(newWaterAmount), String.valueOf(newScheduledFreq), newScheduledTime, currentDeviceInfo.serverPubkey);
+                        int editModeResult = currentDeviceInfo.tcpClient.editModeRequest(String.valueOf(newMode), String.valueOf(newWaterAmount), String.valueOf(newScheduledFreq), newScheduledTime, currentDeviceInfo.serverPubkey);
+                        switch(editModeResult) {
+                            case 0:
+                                //Update the data in local database
+                                HICApplication.getInstance().deviceDatabaseHelper.updateMode(currentDeviceInfo, newMode, newWaterAmount, newScheduledFreq, newScheduledTime);
 
-                        //Update the data in local database
-                        HICApplication.getInstance().deviceDatabaseHelper.updateMode(currentDeviceInfo, newMode, newWaterAmount, newScheduledFreq, newScheduledTime);
+                                //Update mode in the memory
+                                currentDeviceInfo.mode = newMode;
+                                currentDeviceInfo.waterAmount = newWaterAmount;
+                                currentDeviceInfo.scheduledFreq = newScheduledFreq;
+                                currentDeviceInfo.scheduledTime = newScheduledTime;
 
-                        //Update mode in the memory
-                        currentDeviceInfo.mode = newMode;
-                        currentDeviceInfo.waterAmount = newWaterAmount;
-                        currentDeviceInfo.scheduledFreq = newScheduledFreq;
-                        currentDeviceInfo.scheduledTime = newScheduledTime;
-
-                        //Update mode in the viewmodel
-                        dashboardViewModel.loadData();
+                                //Update mode in the viewmodel
+                                dashboardViewModel.loadData();
+                                break;
+                            case TCPClient.ERR_NETWORK_TIMEOUT:
+                                Toast.makeText(requireContext(), "Error: Network timeout", Toast.LENGTH_SHORT).show();
+                                break;
+                            case TCPClient.ERR_MESSAGE_FORMAT:
+                                Toast.makeText(requireContext(), "Error: Message format is wrong", Toast.LENGTH_SHORT).show();
+                                break;
+                            case TCPClient.ERR_MESSAGE_CONTENT:
+                                Toast.makeText(requireContext(), "Error: Message content is wrong", Toast.LENGTH_SHORT).show();
+                                break;
+                            case TCPClient.ERR_INTERRUPTED:
+                                Toast.makeText(requireContext(), "Error: Device added", Toast.LENGTH_SHORT).show();
+                                break;
+                            case TCPClient.ERR_OTHERS:
+                                Toast.makeText(requireContext(), "Unknown error", Toast.LENGTH_SHORT).show();
+                                break;
+                        }
 
                         editModeDialog.dismiss();
                     }
@@ -247,7 +266,24 @@ public class DashboardFragment extends Fragment {
                 AlertDialog.Builder processDialogBuilder = new AlertDialog.Builder(requireContext());
                 processDialogBuilder.setTitle("Processing");
                 AlertDialog processDialog = processDialogBuilder.show();
-                currentDeviceInfo.tcpClient.wateringNowRequest(currentDeviceInfo.serverPubkey);
+                int wateringNowResult = currentDeviceInfo.tcpClient.wateringNowRequest(currentDeviceInfo.serverPubkey);
+                switch(wateringNowResult) {
+                    case TCPClient.ERR_NETWORK_TIMEOUT:
+                        Toast.makeText(requireContext(), "Error: Network timeout", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_MESSAGE_FORMAT:
+                        Toast.makeText(requireContext(), "Error: Message format is wrong", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_MESSAGE_CONTENT:
+                        Toast.makeText(requireContext(), "Error: Message content is wrong", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_INTERRUPTED:
+                        Toast.makeText(requireContext(), "Error: Device added", Toast.LENGTH_SHORT).show();
+                        break;
+                    case TCPClient.ERR_OTHERS:
+                        Toast.makeText(requireContext(), "Unknown error", Toast.LENGTH_SHORT).show();
+                        break;
+                }
                 processDialog.dismiss();
 
             }
