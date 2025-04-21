@@ -3,7 +3,6 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
-    <string name="text_watering_mode">Your watering mode is:</string>
     <string name="text_ok">OK</string>
     <string name="text_edit">Edit</string>
     <string name="title_activity_main">MainActivity</string>
@@ -11,14 +10,16 @@
     <string name="text_add">Add</string>
     <string name="text_add_device">Add a new device</string>
     <string name="text_name">Name:</string>
-    <string name="text_ip_address">IP Address:</string>
     <string name="text_port">Port:</string>
     <string name="text_mode">Mode:</string>
     <string name="text_device_add">Add a new device</string>
     <string name="text_address">Address:</string>
     <string name="text_basic_info">Basic Information</string>
+    <string name="text_edit_basic_info">Edit Basic Info</string>
+    <string name="text_host">Host</string>
+    <string name="text_done">Done</string>
+    <string name="text_watering_now">Watering Now</string>
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <!-- Strings used for fragments for navigation -->
 
     <!-- TODO: Remove or change this placeholder text -->

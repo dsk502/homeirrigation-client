@@ -33,7 +33,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/button_add_devices"
         app:layout_constraintStart_toEndOf="@id/button_add_devices"
         android:layout_marginStart="20dp"
-        android:text="Edit"/>
+        android:text="@string/text_edit"/>
 
 
     <GridView

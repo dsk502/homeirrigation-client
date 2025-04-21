@@ -46,7 +46,7 @@
         app:layout_constraintStart_toStartOf="@id/textView_device_add_name"
         app:layout_constraintTop_toBottomOf="@id/textView_device_add_name"
         android:layout_marginTop="30dp"
-        android:text="@string/text_ip_address"/>
+        android:text="@string/text_host"/>
 
     <EditText
         android:id="@+id/editText_ip_address"

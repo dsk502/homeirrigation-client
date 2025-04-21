@@ -24,10 +24,7 @@ public class DeviceDatabaseHelper extends SQLiteOpenHelper {
         //Create database tables
         String createDevicesTableSQL = "CREATE TABLE servers (server_id TEXT PRIMARY KEY, name TEXT, server_pubkey TEXT, client_add_time INTEGER, host TEXT, port INTEGER, mode INTEGER, water_amount REAL, scheduled_freq INTEGER, scheduled_time TEXT)";
         db.execSQL(createDevicesTableSQL);
-        /*
-        String createWateringDataTableSQL = "CREATE TABLE watering_data (id INTEGER PRIMARY KEY)";
-        db.execSQL(createWateringDataTableSQL);
-        */
+
     }
 
     @Override

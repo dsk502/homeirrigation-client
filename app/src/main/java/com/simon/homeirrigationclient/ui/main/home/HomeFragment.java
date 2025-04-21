@@ -73,12 +73,12 @@ public class HomeFragment extends Fragment {
                     //If button is edit
                     gridViewAdapter.showDeleteButton = true;
                     gridViewAdapter.notifyDataSetChanged();
-                    buttonEditDone.setText("Done");
+                    buttonEditDone.setText(R.string.text_done);
                     buttonEditDone.setTag("Done");
                 } else {    //If button is done
                     gridViewAdapter.showDeleteButton = false;
                     gridViewAdapter.notifyDataSetChanged();
-                    buttonEditDone.setText("Edit");
+                    buttonEditDone.setText(R.string.text_edit);
                     buttonEditDone.setTag("Edit");
                 }
 

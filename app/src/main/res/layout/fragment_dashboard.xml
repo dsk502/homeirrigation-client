@@ -158,7 +158,7 @@
             app:layout_constraintStart_toStartOf="@+id/dashboard_mode_tag"
             app:layout_constraintTop_toBottomOf="@+id/textView_dashboard_scheduled_time"
             android:layout_marginTop="20dp"
-            android:text="Watering now"/>
+            android:text="@string/text_watering_now"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

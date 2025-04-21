@@ -469,7 +469,7 @@ public class TCPClient {
                     //Send del_device()
                     sendingMessage = "del_device()";
                     sendingBytes = packMessageEncrypt(sendingMessage, serverPubkey);
-                    Log.d("Server pub key:", serverPubkey);
+                    //Log.d("Server pub key:", serverPubkey);
                     out.write(sendingBytes);
                     out.flush();
 

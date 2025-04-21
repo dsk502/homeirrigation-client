@@ -22,8 +22,7 @@
             android:theme="@style/Theme.HomeIrrigationClient" />
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:label="@string/title_activity_main">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -32,8 +31,7 @@
         </activity>
         <activity
             android:name=".ui.machine.MachineActivity"
-            android:exported="true"
-            android:label="@string/app_name" />
+            android:exported="true" />
     </application>
 
 </manifest>

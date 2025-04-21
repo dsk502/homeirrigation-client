@@ -65,8 +65,5 @@ public class DashboardViewModel extends ViewModel {
         mWaterAmount.setValue(currentDeviceInfo.waterAmount);
         mScheduledFreq.setValue(currentDeviceInfo.scheduledFreq);
         mScheduledTime.setValue(currentDeviceInfo.scheduledTime);
-
     }
-
-
 }
