@@ -2,14 +2,12 @@
 <resources>
     <string name="app_name">家庭灌溉客户端</string>
     <string name="title_home">主页</string>
-    <string name="title_dashboard">面板</string>
-    <string name="title_notifications">通知</string>
+    <string name="title_dashboard">仪表板</string>
     <string name="text_ok">确认</string>
     <string name="text_edit">编辑</string>
     <string name="title_activity_main">主活动</string>
     <string name="text_devices">设备</string>
     <string name="text_add">添加</string>
-    <string name="text_add_device">添加新设备</string>
     <string name="text_name">名称</string>
     <string name="text_port">端口</string>
     <string name="text_mode">模式</string>
@@ -20,4 +18,8 @@
     <string name="text_host">主机</string>
     <string name="text_done">完成</string>
     <string name="text_watering_now">立即浇水</string>
+    <string name="title_about">关于</string>
+    <string name="text_cancel">取消</string>
+    <string name="text_statistics">统计数据</string>
+    <string name="text_edit_mode">编辑模式</string>
 </resources>

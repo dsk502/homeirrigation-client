@@ -4,11 +4,11 @@
     <item
         android:id="@+id/navigation_dashboard"
         android:icon="@drawable/ic_dashboard_black_24dp"
-        android:title="Dashboard" />
+        android:title="@string/title_dashboard" />
 
     <item
         android:id="@+id/navigation_statistics"
         android:icon="@drawable/ic_statistics_black_24dp"
-        android:title="Statistics" />
+        android:title="@string/text_statistics" />
 
 </menu>
